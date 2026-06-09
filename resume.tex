@@ -1,0 +1,166 @@
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\usepackage{xcolor}
+
+\definecolor{headingcolor}{HTML}{0F4539}
+\definecolor{bodycolor}{HTML}{444444}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.2in}
+\addtolength{\topmargin}{-0.7in}
+\addtolength{\textheight}{1.4in}
+
+\urlstyle{same}
+\setlength{\tabcolsep}{0in}
+\raggedbottom
+\raggedright
+
+\titleformat{\section}{
+  \color{headingcolor}\vspace{-4pt}\scshape\raggedright\large\bfseries
+}{}{0em}{}[\color{headingcolor}\titlerule \vspace{-5pt}]
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{#2} \\
+      \textit{\small #3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[3]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{#2} \\
+      \textit{\small #3} & \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeItem}[1]{
+  \item\small{\color{bodycolor} #1 \vspace{-2pt}}
+}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=0.15in]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\newcommand{\resumeLink}[2]{\href{#1}{\faIcon\ \underline{#2}}}
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    {\Huge \scshape \color{headingcolor} Sarthak Baderiya} \\[4pt]
+    {\small \color{bodycolor} Indore, Madhya Pradesh, India} \\[6pt]
+    \small
+    \href{tel:+919876543210}{\faPhone\ +91-98765-43210} \quad
+    \href{mailto:sarthakbaderiya19@gmail.com}{\faEnvelope\ sarthakbaderiya19@gmail.com} \\[4pt]
+    \href{https://www.linkedin.com/in/sarthak-baderiya/}{\faLinkedin\ sarthak-baderiya} \quad
+    \href{https://github.com/sarthak2131}{\faGithub\ sarthak2131} \quad
+    \href{https://www.sarthakbaderiya.me/}{\faGlobe\ sarthakbaderiya.me}
+\end{center}
+
+%-----------PROFESSIONAL SUMMARY-----------
+\section{Professional Summary}
+\small\color{bodycolor}
+Full-stack developer skilled in the MERN stack (React.js, Node.js, Express.js, MongoDB) and Java. Experienced building REST APIs, JWT-based authentication, real-time features with Socket.io, and responsive UIs. Comfortable with Git, Docker, Python, and modern deployment workflows. Seeking opportunities to deliver scalable, user-focused web applications.
+\normalsize\color{black}
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+\vspace{-4pt}
+\begin{itemize}[leftmargin=0.15in, label={}, itemsep=1pt, parsep=0pt, topsep=0pt]
+  \item \textbf{Languages:} Java, JavaScript (ES6+), Python, C, C++, HTML5, CSS3
+  \item \textbf{Frontend:} React.js, Tailwind CSS, responsive UI design
+  \item \textbf{Backend:} Node.js, Express.js, RESTful APIs, JWT authentication, Socket.io
+  \item \textbf{Databases:} MongoDB, MongoDB Atlas
+  \item \textbf{Tools \& DevOps:} Git, GitHub, Docker, Postman, npm, VS Code, Netlify, Vercel
+  \item \textbf{Core CS:} Data Structures and Algorithms, object-oriented design
+\end{itemize}
+\vspace{-8pt}
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {IT Intern}{Jun 2025 -- Jul 2025}
+    {Indore Municipal Corporation (IMC), Indore, MP}{}
+  \resumeItemListStart
+    \resumeItem{Selected for the ``Internship with Mayor'' program under IMC}
+    \resumeItem{Developed features for a municipal digital services portal in a six-member team}
+    \resumeItem{Built secure onboarding, JWT authentication, and role-based access control}
+    \resumeItem{Gathered requirements from officials and supported UAT and bug fixes}
+  \resumeItemListEnd
+\resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Projects}
+\resumeSubHeadingListStart
+
+  \resumeProjectHeading
+    {Find My Teammate -- Collaboration Platform}{2025}
+    {React.js, Node.js, Express.js, MongoDB, Socket.io, Tailwind CSS}
+  \hfill
+  \small
+  \href{https://github.com/sarthak2131}{\faGithub\ GitHub}
+  \resumeItemListStart
+    \resumeItem{Built a MERN platform for students and developers to post projects, discover teammates, and manage join requests}
+    \resumeItem{Implemented JWT auth, profiles with skills, project filtering, accept/reject workflows, and an admin dashboard}
+    \resumeItem{Added real-time chat and typing indicators using Socket.io with a notification feed}
+  \resumeItemListEnd
+
+  \resumeProjectHeading
+    {Learnify -- Online Learning Platform}{2025}
+    {React.js, Node.js, Express.js, MongoDB, Tailwind CSS}
+  \hfill
+  \small
+  \href{https://github.com/sarthak2131}{\faGithub\ GitHub}
+  \resumeItemListStart
+    \resumeItem{Developed a full-stack e-learning app with user authentication, video lectures, and course management}
+    \resumeItem{Created an admin dashboard for user and content management}
+  \resumeItemListEnd
+
+\resumeSubHeadingListEnd
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {Acropolis Institute of Technology and Research}{2021 -- 2026 (Expected)}
+    {Integrated Master of Computer Applications (IMCA) -- CGPA: 7.18}{Indore, MP}
+  \resumeSubheading
+    {Madhya Pradesh Board of Secondary Education}{2021}
+    {Senior Secondary (10+2) -- 76.6\%}{}
+  \resumeSubheading
+    {Madhya Pradesh Board of Secondary Education}{2019}
+    {High School (10th) -- 76.6\%}{}
+\resumeSubHeadingListEnd
+
+%-----------CERTIFICATIONS-----------
+\section{Certifications}
+\resumeSubHeadingListStart
+  \resumeItem{MERN Full-Stack Development -- CodeBetter (45-day intensive program)}
+\resumeSubHeadingListEnd
+
+%-----------ACHIEVEMENTS-----------
+\section{Achievements}
+\resumeSubHeadingListStart
+  \resumeItem{1st Prize -- Web Development 101 Workshop, Techotsav 2023}
+  \resumeItem{Recognized for Hall Booking Software project}
+\resumeSubHeadingListEnd
+
+%-----------ADDITIONAL INFO-----------
+\section{Additional Information}
+\resumeSubHeadingListStart
+  \item \textbf{Languages:} Hindi (Native), English (Professional working proficiency)
+  \item \textbf{Interests:} Web development, open-source, anime
+\resumeSubHeadingListEnd
+
+\end{document}

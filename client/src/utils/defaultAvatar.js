@@ -1,0 +1,2 @@
+export const defaultAvatar =
+  "data:image/svg+xml;utf8,%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20128%20128%22%20fill%3D%22none%22%3E%0A%20%20%3Crect%20width%3D%22128%22%20height%3D%22128%22%20rx%3D%2232%22%20fill%3D%22%23E2E8F0%22/%3E%0A%20%20%3Ccircle%20cx%3D%2264%22%20cy%3D%2246%22%20r%3D%2222%22%20fill%3D%22%2394A3B8%22/%3E%0A%20%20%3Cpath%20d%3D%22M28%20104c8-15.333%2020-23%2036-23s28%207.667%2036%2023%22%20fill%3D%22%2394A3B8%22/%3E%0A%3C/svg%3E";
