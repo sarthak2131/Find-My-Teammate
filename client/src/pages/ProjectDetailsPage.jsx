@@ -196,12 +196,7 @@ export default function ProjectDetailsPage() {
             </div>
           )}
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="surface-muted border-brand-100 bg-brand-50/60 dark:border-brand-900/40 dark:bg-brand-950/20">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-brand-600 dark:text-brand-300">Match score</p>
-              <p className="mt-2 text-2xl font-extrabold text-brand-800 dark:text-white">{fitInsights.fitScore}%</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{fitInsights.verdict}</p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="surface-muted border-slate-200 bg-slate-50/70 dark:border-slate-700/50 dark:bg-slate-900/20">
               <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Capacity</p>
               <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{openSpots} spots</p>

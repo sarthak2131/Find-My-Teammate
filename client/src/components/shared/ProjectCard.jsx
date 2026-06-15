@@ -103,25 +103,8 @@ export default function ProjectCard({
 
       <div className="flex flex-1 flex-col p-4">
         <p className="line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{project.description}</p>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-xl border border-brand-100 bg-brand-50/70 px-3 py-2 dark:border-brand-900/40 dark:bg-brand-950/30">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-brand-600 dark:text-brand-300">Match score</p>
-            <p className="mt-1 text-sm font-extrabold text-brand-800 dark:text-white">{fitInsights.fitScore}%</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">{fitInsights.verdict}</p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 dark:border-slate-700/50 dark:bg-slate-900/40">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Open spots</p>
-            <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-white">{openSpots}/{capacity}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">{isFull ? "Team full" : "Seats available"}</p>
-          </div>
-        </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {project.preferredGender && project.preferredGender !== "any" && <span className="chip">{getProjectGenderLabel(project.preferredGender)}</span>}
-          {fitInsights.matchedSkills.slice(0, 2).map((skill) => (
-            <span key={`match-${skill}`} className="rounded-lg bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-              Match: {skill}
-            </span>
-          ))}
           {(project.requiredSkills || []).map((s) => (
             <span key={s} className="rounded-lg bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-800 dark:bg-brand-950/50 dark:text-brand-300">{s}</span>
           ))}

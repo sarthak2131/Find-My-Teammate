@@ -37,11 +37,15 @@ const normaliseList = (value) => {
 };
 
 const getUsers = asyncHandler(async (req, res) => {
-  const { search, skill, excludeSelf } = req.query;
+  const { search, skill, excludeSelf, includeAdmins } = req.query;
   const filters = [];
 
   if (excludeSelf === "true") {
     filters.push({ _id: { $ne: req.user._id } });
+  }
+
+  if (includeAdmins !== "true") {
+    filters.push({ role: { $ne: "admin" } });
   }
 
   if (skill) {

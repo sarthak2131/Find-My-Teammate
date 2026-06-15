@@ -48,7 +48,9 @@ export default function AdminPage() {
 
   const loadAllUsers = async () => {
     try {
-      const { data } = await api.get("/users");
+      const { data } = await api.get("/users", {
+        params: { includeAdmins: "true" }
+      });
       setAllUsers(data.users || []);
     } catch (err) {
       setFeedback("Failed to load users directory.");
