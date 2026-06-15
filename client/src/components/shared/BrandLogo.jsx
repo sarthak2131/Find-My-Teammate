@@ -1,41 +1,39 @@
 import { Link } from "react-router-dom";
-import { UsersRound } from "lucide-react";
 
-export default function BrandLogo({ to = "/", size = "md", className = "", light = false }) {
-  const sizes = {
-    sm: { icon: "h-4 w-4", text: "text-base", box: "h-8 w-8" },
-    md: { icon: "h-5 w-5", text: "text-lg", box: "h-10 w-10" },
-    lg: { icon: "h-6 w-6", text: "text-2xl", box: "h-12 w-12" },
+export default function BrandLogo({ to = "/", size = "md", className = "" }) {
+  const heights = {
+    sm: "h-8 sm:h-9",
+    md: "h-10 sm:h-11",
+    lg: "h-12 sm:h-14",
   };
-  const s = sizes[size] || sizes.md;
+  const textSizes = {
+    sm: "text-sm sm:text-base",
+    md: "text-base sm:text-lg",
+    lg: "text-lg sm:text-xl",
+  };
+  const h = heights[size] || heights.md;
+  const ts = textSizes[size] || textSizes.md;
 
   const content = (
     <>
-      <span
-        className={`flex ${s.box} shrink-0 items-center justify-center rounded-xl bg-brand-600 shadow-glow`}
-      >
-        <UsersRound className={`${s.icon} text-white`} />
-      </span>
-      <span className={`font-display font-bold tracking-tight ${s.text}`}>
-        {light ? (
-          <span className="text-white">Find My Teammate</span>
-        ) : (
-          <>
-            <span className="text-brand-600 dark:text-brand-400">Find My</span>
-            <span className="text-slate-800 dark:text-white"> Teammate</span>
-          </>
-        )}
+      <img
+        src="/logo.png"
+        alt="Find My Teammate logo"
+        className={`${h} w-auto object-contain`}
+      />
+      <span className={`font-display font-bold tracking-tight text-slate-900 dark:text-white ${ts} ml-2.5`}>
+        Find My <span className="text-orange-500">Teammate</span>
       </span>
     </>
   );
 
   if (to) {
     return (
-      <Link to={to} className={`flex items-center gap-2.5 ${className}`}>
+      <Link to={to} className={`inline-flex items-center ${className}`}>
         {content}
       </Link>
     );
   }
 
-  return <div className={`flex items-center gap-2.5 ${className}`}>{content}</div>;
+  return <div className={`inline-flex items-center ${className}`}>{content}</div>;
 }

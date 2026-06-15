@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Project = require("../models/Project");
 const Request = require("../models/Request");
 const Notification = require("../models/Notification");
+const Report = require("../models/Report");
 const asyncHandler = require("../middleware/asyncHandler");
 const { hasCloudinaryConfig } = require("../config/cloudinary");
 const { createDefaultProfileImage } = require("../constants/defaultAvatar");
@@ -176,28 +177,99 @@ const toggleBookmark = asyncHandler(async (req, res) => {
 });
 
 const getAdminOverview = asyncHandler(async (req, res) => {
-  const [userCount, projectCount, requestCount, notificationCount] = await Promise.all([
+  const [userCount, requestCount, reportCount, allProjects] = await Promise.all([
     User.countDocuments(),
-    Project.countDocuments(),
     Request.countDocuments(),
-    Notification.countDocuments(),
+    Report.countDocuments(),
+    Project.find({ isShowcase: { $ne: true } })
+      .populate("createdBy", "name")
+      .sort({ createdAt: -1 })
   ]);
 
+  const filteredProjects = allProjects.filter(
+    (project) => !project.isShowcase && !project.description?.includes("GitHub: https://github.com/")
+  );
+
+  const projectCount = filteredProjects.length;
+  const recentProjects = filteredProjects.slice(0, 5);
+
   const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5);
-  const recentProjects = await Project.find()
-    .populate("createdBy", "name")
-    .sort({ createdAt: -1 })
-    .limit(5);
 
   res.json({
     stats: {
       userCount,
       projectCount,
       requestCount,
-      notificationCount,
+      reportCount,
     },
     recentUsers,
     recentProjects,
+  });
+});
+
+const suspendUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  if (user.role === "admin") {
+    res.status(400);
+    throw new Error("Administrators cannot be suspended.");
+  }
+
+  user.isSuspended = !user.isSuspended;
+  if (user.isSuspended) {
+    user.suspensionReason = req.body.reason || "Suspended by Administrator";
+  } else {
+    user.suspensionReason = "";
+  }
+
+  await user.save();
+
+  res.json({
+    message: `User accounts successfully ${user.isSuspended ? "suspended" : "unsuspended"}.`,
+    user,
+  });
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  if (user.role === "admin") {
+    res.status(400);
+    throw new Error("Administrators cannot be deleted.");
+  }
+
+  // Cascading deletes:
+  // 1. Delete all projects created by this user
+  const projects = await Project.find({ createdBy: user._id });
+  for (const project of projects) {
+    await Request.deleteMany({ projectId: project._id });
+    await Report.deleteMany({ project: project._id });
+    await project.deleteOne();
+  }
+
+  // 2. Delete all requests involving this user
+  await Request.deleteMany({
+    $or: [{ sender: user._id }, { receiver: user._id }],
+  });
+
+  // 3. Delete all reports submitted by this user
+  await Report.deleteMany({ reporter: user._id });
+
+  // 4. Delete the user
+  await user.deleteOne();
+
+  res.json({
+    message: "User and all associated data permanently deleted.",
   });
 });
 
@@ -207,4 +279,6 @@ module.exports = {
   updateUser,
   toggleBookmark,
   getAdminOverview,
+  suspendUser,
+  deleteUser,
 };

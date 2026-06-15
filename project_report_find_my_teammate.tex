@@ -75,12 +75,12 @@
   {1em}
   {}
 
-\newcommand{\projecttitle}{Find My Teammate}
+\newcommand{\projecttitle}{Find My Teammate (SyncUp)}
 \newcommand{\reporttype}{A Major Project Report}
 \newcommand{\degree}{Master of Computer Applications}
 \newcommand{\sessionyear}{2025--2026}
 \newcommand{\submissionmonthyear}{May 2026}
-\newcommand{\supervisorname}{Dr./Prof. \underline{\hspace{1.8in}}}
+\newcommand{\supervisorname}{DR. ARVIND JAISWAL}
 \newcommand{\hodname}{Dr./Prof. \underline{\hspace{1.8in}}}
 \newcommand{\internalexaminer}{Dr./Prof. \underline{\hspace{1.8in}}}
 \newcommand{\externalexaminer}{Dr./Prof. \underline{\hspace{1.8in}}}
@@ -147,70 +147,52 @@
   \end{titlepage}
 }
 
+\makeatletter
+\renewcommand\tableofcontents{%
+  \pagestyle{empty}%
+  \chapter*{\contentsname
+    \@mkboth{\MakeUppercase\contentsname}{\MakeUppercase\contentsname}}%
+  \thispagestyle{empty}%
+  \@starttoc{toc}%
+}
+\renewcommand\listoftables{%
+  \pagestyle{empty}%
+  \chapter*{\listtablename}%
+  \thispagestyle{empty}%
+  \@starttoc{lot}%
+}
+\renewcommand\listoffigures{%
+  \pagestyle{empty}%
+  \chapter*{\listfigurename}%
+  \thispagestyle{empty}%
+  \@starttoc{lof}%
+}
+\renewenvironment{thebibliography}[1]{%
+  \list{\@biblabel{\@arabic\c@enumiv}}{%
+    \settowidth\labelwidth{\@biblabel{#1}}%
+    \leftmargin\labelwidth
+    \advance\leftmargin\labelsep
+    \@openbib@code
+    \usecounter{enumiv}%
+    \let\p@enumiv\@empty
+    \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+  \sloppy
+  \clubpenalty4000
+  \@clubpenalty \clubpenalty
+  \widowpenalty4000%
+  \sfcode`\.\@m
+}{%
+  \def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+  \endlist
+}
+\makeatother
+
 \begin{document}
 
 \makecoverpage
-\makecoverpage
-
-\pagenumbering{roman}
-
-\chapter*{Certificate}
-\addcontentsline{toc}{chapter}{Certificate}
-
-This is to certify that this project report entitled ``\projecttitle'' submitted by \studentone\ (\rollone) and \studenttwo\ (\rolltwo) to \college\ in the partial fulfilment of the requirements for the degree of \degree\ during the academic session \sessionyear\ is a bona fide record of project work carried out by them under the supervision of \supervisorname.
-
-\vspace{1em}
-The work presented in this report is original and has not been submitted, either in full or in part, to any other university or institution for the award of any degree or diploma. In our opinion, the project work is satisfactory in scope, quality, and academic relevance for submission and evaluation.
-
-\vspace{2em}
-\noindent
-\signatureblock{Signature of HOD}{\hodname}
-\hfill
-\signatureblock{Signature of Supervisor}{\supervisorname}
-
-\vspace{3em}
-\noindent
-\signatureblock{Signature of External Examiner}{\externalexaminer}
-\hfill
-\signatureblock{Signature of Internal Examiner}{\internalexaminer}
-
-\vspace{2em}
-\noindent
-\textbf{Date:} \underline{\hspace{1.4in}} \hfill \textbf{Place:} Indore
-
-\chapter*{Internship Certificate}
-\addcontentsline{toc}{chapter}{Internship Certificate}
-
-This is to certify that \studentone\ (\rollone) and \studenttwo\ (\rolltwo) completed industrial exposure / internship / project training related to the development of ``\projecttitle'' at \organisationname\ under the guidance of \industrymentor.
-
-\vspace{1em}
-During the period of training, the students studied the requirements of collaboration platforms, analysed real user problems in team discovery, and implemented a prototype using React.js, Node.js, Express.js, MongoDB, JWT authentication, and Socket.IO for real-time features. Their conduct, technical learning, and project contribution were found satisfactory.
-
-\vspace{3em}
-\noindent
-\signatureblock{Industry Mentor / Authorised Signatory}{\industrymentor}
-\hfill
-\signatureblock{Organisation Seal}{\organisationname}
-
-\vspace{2em}
-\noindent
-\textbf{Date:} \underline{\hspace{1.4in}} \hfill \textbf{Place:} \underline{\hspace{1.4in}}
-
-\chapter*{Acknowledgement}
-\addcontentsline{toc}{chapter}{Acknowledgement}
-
-We express our sincere gratitude to the Faculty of Computer Applications, Acropolis Institute of Technology \& Research, Indore for providing the academic environment, computing resources, and institutional support necessary for the completion of this project.
-
-\vspace{0.5em}
-We are deeply thankful to our project supervisor, \supervisorname, for continuous guidance, constructive feedback, and consistent encouragement throughout the analysis, design, implementation, and documentation stages of this work. Their suggestions helped us refine both the technical architecture and the academic presentation of the project.
-
-\vspace{0.5em}
-We also acknowledge the Head of Department, \hodname, and all faculty members of the department for their support, valuable inputs, and motivation during the semester. We thank our classmates, friends, and family members for their assistance during testing, feedback collection, and improvement of the user experience.
-
-\vspace{0.5em}
-Finally, we acknowledge all open-source communities and official documentation sources of React, Node.js, MongoDB, Express, Socket.IO, and related tools that made this project technically feasible and academically enriching.
 
 \chapter*{Abstract}
+\thispagestyle{empty}
 \addcontentsline{toc}{chapter}{Abstract}
 
 The project ``\projecttitle'' is a full-stack web application designed to solve the common problem of finding suitable teammates for hackathons, academic projects, startup ideas, and freelance collaborations. In many institutions and developer communities, students and professionals possess relevant technical skills but fail to identify reliable collaborators within limited time. The proposed system provides a unified digital platform where users can create a profile, display skills and interests, post project opportunities, discover teammates, send and manage collaboration requests, exchange messages in real time, and monitor activity through dashboards and notifications.
@@ -221,11 +203,13 @@ The system has been implemented using the MERN technology stack. The frontend is
 \vspace{0.5em}
 The major contribution of the project lies in integrating teammate discovery, project posting, request handling, and communication within a single responsive platform. The application improves project formation speed, reduces coordination friction, and offers role-based features for normal users, team leads, and administrators. The proposed platform demonstrates practical full-stack development, database design, software engineering documentation, and system testing in a real-world academic context.
 
+
 \tableofcontents
 \listoftables
 \listoffigures
 
 \chapter*{List of Symbols and Abbreviations}
+\thispagestyle{empty}
 \addcontentsline{toc}{chapter}{List of Symbols and Abbreviations}
 
 {\small
@@ -254,6 +238,8 @@ UX & User Experience \\
 
 \clearpage
 \pagenumbering{arabic}
+\setcounter{page}{1}
+\pagestyle{plain}
 
 \chapter{Introduction}
 
@@ -379,17 +365,22 @@ The project was divided into major phases to ensure disciplined implementation a
 \section{Gantt Chart (Timeline of Project Phases)}
 \begin{figure}[H]
 \centering
-\resizebox{\linewidth}{!}{%
+\makebox[\textwidth][c]{%
+\resizebox{0.88\paperwidth}{!}{%
 \begin{ganttchart}[
-  x unit=0.30cm,
-  y unit chart=0.52cm,
+  x unit=0.34cm,
+  y unit title=0.68cm,
+  y unit chart=0.58cm,
   title height=1,
+  bar height=0.58,
   vgrid,
   hgrid,
-  bar/.append style={fill=gray!50},
-  title/.append style={fill=gray!15},
-  bar label font=\footnotesize,
-  title label font=\footnotesize
+  title/.append style={draw=black!35, fill=gray!15},
+  bar/.append style={draw=black!45, fill=gray!55},
+  title label font=\scriptsize\bfseries,
+  title label node/.append style={inner xsep=0.8pt},
+  bar label font=\small,
+  bar label node/.append style={text width=5.4cm, align=right}
 ]{1}{18}
 \gantttitle{Project Weeks}{18} \\
 \gantttitlelist{1,...,18}{1} \\
@@ -402,6 +393,7 @@ The project was divided into major phases to ensure disciplined implementation a
 \ganttbar{Testing and Debugging}{14}{15} \\
 \ganttbar{Documentation and Final Review}{16}{18}
 \end{ganttchart}%
+}%
 }
 \caption{Indicative Gantt Chart for Development Phases}
 \end{figure}
@@ -481,33 +473,34 @@ Google Chrome / Edge & Browser testing and debugging \\
 \subsection{Data Flow Diagram}
 \begin{figure}[H]
 \centering
+\makebox[\textwidth][c]{%
+\resizebox{0.88\paperwidth}{!}{%
 \begin{tikzpicture}[
   font=\footnotesize,
-  node distance=1.9cm and 3.6cm,
-  ext/.style={draw, minimum width=2.0cm, minimum height=0.85cm, fill=gray!10, align=center},
-  proc/.style={draw, ellipse, minimum width=3.2cm, minimum height=1.2cm, fill=gray!15, align=center, inner sep=3pt},
-  store/.style={draw, minimum width=2.35cm, minimum height=0.8cm, fill=gray!05, align=center, font=\scriptsize, inner sep=2pt},
-  flow/.style={-Latex, thick},
-  note/.style={font=\scriptsize, fill=white, inner sep=2pt}
+  ext/.style={draw, minimum width=2.1cm, minimum height=0.9cm, fill=gray!10, align=center},
+  proc/.style={draw, ellipse, minimum width=4.0cm, minimum height=1.35cm, fill=gray!15, align=center, inner sep=3pt},
+  store/.style={draw, minimum width=2.85cm, minimum height=0.9cm, fill=gray!05, align=center, font=\scriptsize, inner sep=2pt},
+  flow/.style={-{Latex[length=2.3mm]}, thick},
+  rwflow/.style={<->, >=Latex, thick},
+  note/.style={font=\scriptsize, fill=white, inner sep=2pt, align=center}
 ]
-\node[ext] (student) {User / Student};
-\node[proc, right=3.8cm of student] (system) {\projecttitle\\Processing System};
-\node[store, right=3.4cm of system, yshift=1.85cm] (db1) {User Store};
-\node[store, right=3.4cm of system] (db2) {Project Store};
-\node[store, right=3.4cm of system, yshift=-1.85cm] (db3) {Request, Message\\and Notification Store};
-\node[ext, below=2.6cm of system] (admin) {Admin};
+\node[ext] (student) at (0,0) {User / Student};
+\node[proc] (system) at (5.7,0) {\projecttitle\\Processing System};
+\node[store] (db1) at (10.8,1.9) {User Store};
+\node[store] (db2) at (10.8,0) {Project Store};
+\node[store] (db3) at (10.8,-1.9) {Request, Message\\and Notification Store};
+\node[ext] (admin) at (5.7,-3.7) {Admin};
 
-\draw[flow] ([yshift=4pt]student.east) -- node[note, above, pos=0.45, align=center] {register, login,\\search, message} ([yshift=4pt]system.west);
-\draw[flow] ([yshift=-4pt]system.west) -- node[note, below, pos=0.45, align=center] {results, alerts,\\responses} ([yshift=-4pt]student.east);
-\draw[flow] (system.east) to[bend left=8] node[note, above, pos=0.5] {read / write} (db1.west);
-\draw[flow] (db1.west) to[bend left=8] (system.east);
-\draw[flow] (system.east) -- node[note, above, pos=0.55] {CRUD} (db2.west);
-\draw[flow] (db2.west) -- (system.east);
-\draw[flow] (system.east) to[bend right=8] node[note, below, pos=0.5, align=center] {status, chat,\\alerts} (db3.west);
-\draw[flow] (db3.west) to[bend right=8] (system.east);
-\draw[flow] ([xshift=-5pt]admin.north) -- node[note, left, pos=0.5, align=center] {monitoring\\requests} ([xshift=-5pt]system.south);
-\draw[flow] ([xshift=5pt]system.south) -- node[note, right, pos=0.5] {analytics} ([xshift=5pt]admin.north);
-\end{tikzpicture}
+\draw[flow] ([yshift=5pt]student.east) -- node[note, above, pos=0.5] {register, login,\\search, message} ([yshift=5pt]system.west);
+\draw[flow] ([yshift=-5pt]system.west) -- node[note, below, pos=0.5] {results, alerts,\\responses} ([yshift=-5pt]student.east);
+\draw[rwflow] (system.east) -- node[note, above, pos=0.5] {read / write} (db1.west);
+\draw[rwflow] (system.east) -- node[note, above, pos=0.5] {CRUD} (db2.west);
+\draw[rwflow] (system.east) -- node[note, below, pos=0.5] {status, chat,\\alerts} (db3.west);
+\draw[flow] ([xshift=-6pt]admin.north) -- node[note, left, pos=0.5] {monitoring\\requests} ([xshift=-6pt]system.south);
+\draw[flow] ([xshift=6pt]system.south) -- node[note, right, pos=0.5] {analytics} ([xshift=6pt]admin.north);
+\end{tikzpicture}%
+}%
+}
 \caption{Level-0 Data Flow Diagram}
 \end{figure}
 
@@ -928,43 +921,12 @@ The current version establishes a strong foundation. Future enhancements may inc
   \item Faculty approval workflow for official semester project registration.
 \end{enumerate}
 
-\chapter{Research Paper}
+\clearpage
+% Keep Research Paper in the TOC without rendering a separate chapter body.
+\refstepcounter{chapter}
+\addtocontents{toc}{\protect\contentsline{chapter}{\protect\numberline{9}Research Paper}{22}{chapter.9}}
 
-\section{Proposed Research Paper Title}
-\textbf{Find My Teammate: A Skill-Centric MERN Platform for Academic and Startup Collaboration}
-
-\section{Proposed Abstract}
-This paper presents \projecttitle, a web-based collaboration platform that improves team formation for academic projects, hackathons, and early-stage startup initiatives. Existing informal approaches to teammate discovery rely heavily on social groups, manual coordination, and fragmented communication tools, which often lead to skill mismatch and delayed execution. The proposed system addresses this gap through a skill-centric workflow that combines profile management, project posting, join requests, teammate invitations, real-time chat, and notification-based coordination. The platform is implemented using the MERN stack with JWT authentication and Socket.IO for real-time capabilities. A modular database schema and role-based API design support maintainability and scalable extension. The paper discusses system design, implementation methodology, and the practical value of consolidating discovery, coordination, and communication in a single academic collaboration environment.
-
-\section{Keywords}
-Team discovery, MERN stack, project collaboration, academic platform, real-time chat, skill matching, web application.
-
-\section{Research Contribution}
-The proposed research contribution of this project is threefold:
-\begin{itemize}
-  \item It formalises the workflow of team formation rather than treating it as a purely social process.
-  \item It introduces both \textit{join requests} and \textit{lead-driven invitations} in a single project-centric model.
-  \item It demonstrates how lightweight real-time communication can be integrated with structured project workflows for academic use.
-\end{itemize}
-
-\section{Potential Evaluation Parameters}
-The research paper derived from this project can evaluate the system using:
-\begin{enumerate}[label=\arabic*.]
-  \item Average time required to discover a relevant teammate.
-  \item Number of accepted requests and invitations per active project.
-  \item User satisfaction regarding interface clarity and communication flow.
-  \item Reduction in project team formation delays compared to informal methods.
-  \item Technical performance indicators such as API response time and message delivery responsiveness.
-\end{enumerate}
-
-\section{Possible Publication Outlets}
-The work can be refined for publication in:
-\begin{itemize}
-  \item National conferences on software engineering and web technologies.
-  \item Student research journals focusing on applied computer applications.
-  \item Institutional innovation or project compendiums.
-\end{itemize}
-
+\setcounter{page}{26}
 \chapter{References / Bibliography}
 
 \begin{thebibliography}{99}
@@ -1020,89 +982,5 @@ Roger S. Pressman and Bruce R. Maxim.
 \newblock \textit{Software Engineering: A Practitioner's Approach}.
 \newblock McGraw-Hill Education.
 \end{thebibliography}
-
-\appendix
-
-\chapter{Appendix A: Major REST API Endpoints}
-{\small
-\setlength{\tabcolsep}{4pt}
-\begin{longtable}{C{0.75in}L{1.45in}L{2.8in}}
-\toprule
-\textbf{Method} & \textbf{Endpoint} & \textbf{Purpose} \\
-\midrule
-\endfirsthead
-\toprule
-\textbf{Method} & \textbf{Endpoint} & \textbf{Purpose} \\
-\midrule
-\endhead
-POST & /api/auth/register & Register a new user \\
-POST & /api/auth/login & Authenticate existing user \\
-GET & /api/auth/me & Get current authenticated user \\
-GET & /api/users & Search and list users \\
-GET & /api/users/:id & Get user profile and linked projects \\
-PUT & /api/users/update & Update user profile \\
-PUT & /api/users/bookmarks/:projectId & Toggle bookmarked project \\
-GET & /api/users/admin/overview & Admin metrics summary \\
-POST & /api/projects/create & Create new project \\
-GET & /api/projects & List projects with filters \\
-GET & /api/projects/:id & Get project details and requests \\
-DELETE & /api/projects/:id & Delete project \\
-DELETE & /api/projects/:id/members/:memberId & Remove teammate from project \\
-GET & /api/requests & Get requests by view type \\
-POST & /api/requests/send & Send join request or project invite \\
-PUT & /api/requests/accept & Accept request or invite \\
-PUT & /api/requests/reject & Reject request or invite \\
-GET & /api/messages & Get conversation list \\
-GET & /api/messages/:id & Get direct message thread \\
-POST & /api/messages/send & Send a message \\
-GET & /api/notifications & Get notifications list \\
-PUT & /api/notifications/read-all & Mark all notifications as read \\
-PUT & /api/notifications/:id/read & Mark one notification as read \\
-\bottomrule
-\end{longtable}
-}
-
-\chapter{Appendix B: Source Code Structure}
-\begin{verbatim}
-find-my-teammate/
-|-- client/
-|   |-- src/
-|   |   |-- components/
-|   |   |-- context/
-|   |   |-- hooks/
-|   |   |-- pages/
-|   |   |-- services/
-|   |   `-- utils/
-|   |-- package.json
-|   `-- vite.config.js
-|-- server/
-|   |-- config/
-|   |-- constants/
-|   |-- controllers/
-|   |-- middleware/
-|   |-- models/
-|   |-- routes/
-|   |-- sockets/
-|   |-- .env
-|   |-- package.json
-|   `-- server.js
-|-- package.json
-`-- README.md
-\end{verbatim}
-
-\chapter{Appendix C: Sample Environment Configuration}
-\begin{verbatim}
-# server/.env
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/find-my-teammate
-JWT_SECRET=replace_with_secure_secret
-CLIENT_URL=http://localhost:5173,http://localhost:5174
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-# client/.env
-VITE_API_URL=http://localhost:5000/api
-\end{verbatim}
 
 \end{document}

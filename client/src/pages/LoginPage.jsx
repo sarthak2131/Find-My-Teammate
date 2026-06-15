@@ -1,33 +1,72 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  BadgeCheck,
+  KeyRound,
+  Loader2,
+  Mail,
+  ShieldAlert,
+  Sparkles,
+  TimerReset,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import AuthLayout from "../components/layout/AuthLayout";
-import { Mail, Lock, ShieldAlert, Loader2, ArrowRight, Sparkles, Users, Rocket, Zap } from "lucide-react";
 
 const demoAccounts = [
-  { label: "Project Lead", email: "lead.demo@fmt.com", password: "demo12345", badge: "Lead", color: "border-brand-500/20 bg-brand-500/5" },
-  { label: "Builder", email: "builder.demo@fmt.com", password: "demo12345", badge: "Builder", color: "border-accent-400/30 bg-accent-500/10" },
-  { label: "Admin", email: "admin.demo@fmt.com", password: "demo12345", badge: "Admin", color: "border-brand-500/20 bg-white/5" },
+  {
+    label: "Project Lead",
+    email: "lead.demo@fmt.com",
+    password: "demo12345",
+    badge: "Lead lane",
+    description: "Post ideas, review requests, shape the squad.",
+  },
+  {
+    label: "Builder",
+    email: "builder.demo@fmt.com",
+    password: "demo12345",
+    badge: "Dev lane",
+    description: "Browse projects, join teams, and start shipping.",
+  },
+  {
+    label: "Admin",
+    email: "admin.demo@fmt.com",
+    password: "demo12345",
+    badge: "Ops lane",
+    description: "See platform activity, health, and recent action.",
+  },
+];
+
+const highlights = [
+  { icon: Users, value: "Live squads", label: "Recruit with clarity, not chaos." },
+  { icon: Trophy, value: "Demo-ready", label: "Built for judges, mentors, and sprint finals." },
+  { icon: TimerReset, value: "Fast workflow", label: "Discover, invite, chat, and move in one loop." },
 ];
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isSubmitting, isAuthenticated } = useAuth();
+  const { login, isSubmitting, isAuthenticated, user } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
-  if (isAuthenticated) return <Navigate to="/feed" replace />;
+  if (isAuthenticated) {
+    return <Navigate to={user?.role === "admin" ? "/admin" : "/feed"} replace />;
+  }
 
-  const signIn = async (credentials) => {
+  const signIn = useCallback(async (credentials) => {
     try {
-      await login(credentials);
-      navigate(location.state?.from?.pathname || "/feed", { replace: true });
+      const loggedInUser = await login(credentials);
+      const targetPath = loggedInUser?.role === "admin" ? "/admin" : (location.state?.from?.pathname || "/feed");
+      navigate(targetPath, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to sign in. Is the API server running?");
+      setError(err.response?.data?.message || "Unable to sign in. Start the API and database, then try again.");
       throw err;
     }
-  };
+  }, [login, navigate, location.state?.from?.pathname]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,89 +74,196 @@ export default function LoginPage() {
     try {
       await signIn(form);
     } catch {
-      /* error already set in signIn */
+      // handled above
     }
   };
 
-  const sidePanel = (
-    <>
-      <div>
-        <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-400/40 bg-brand-500/20 px-3 py-1 text-xs font-bold text-brand-200">
-          <Sparkles className="h-3.5 w-3.5 text-accent-400" /> Welcome back
-        </span>
-        <h1 className="font-display text-4xl font-bold leading-tight text-white">
-          Find your <span className="text-accent-400">perfect teammate</span>
-        </h1>
-        <p className="mt-4 max-w-md text-sm text-brand-100/90">
-          Hackathons, college projects, startups — match by skills and ship together.
-        </p>
-        <div className="mt-8 grid grid-cols-3 gap-3 border-y border-brand-700/50 py-6">
-          {[
-            { icon: Users, label: "Builders", value: "14K+" },
-            { icon: Rocket, label: "Teams", value: "3.8K" },
-            { icon: Zap, label: "Match rate", value: "98%" },
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label}>
-              <p className="text-[10px] font-bold uppercase text-brand-300/80">{label}</p>
-              <p className="mt-1 flex items-center gap-1 font-display text-lg font-bold text-white">
-                <Icon className="h-4 w-4 text-accent-400" /> {value}
-              </p>
+  const sidePanel = useMemo(() => (theme) => {
+    const isDarkTheme = theme === "dark";
+
+    return (
+      <div className="space-y-8">
+        <div>
+          <span className={`festival-badge ${
+            isDarkTheme
+              ? "border-white/20 bg-white/10 text-white/80"
+              : "!border-orange-100 !bg-white/90 !text-slate-700"
+          }`}>
+            <Sparkles className={`h-3.5 w-3.5 ${isDarkTheme ? "text-orange-400" : "text-orange-500"}`} />
+            Weekend hackathon network
+          </span>
+          <h1 className={`mt-5 max-w-lg font-display text-4xl font-bold leading-[1.02] sm:text-5xl ${
+            isDarkTheme ? "text-white" : "text-slate-900"
+          }`}>
+            Walk in with an idea.
+            <span className={`mt-2 block ${isDarkTheme ? "text-orange-400" : "text-orange-500"}`}>Walk out with a team.</span>
+          </h1>
+          <p className={`mt-4 max-w-md text-base leading-relaxed ${
+            isDarkTheme ? "text-white/72" : "text-slate-600"
+          }`}>
+            Built for college hackathons, campus innovation cells, and project demo weeks where the right teammate changes everything.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {highlights.map(({ icon: Icon, value, label }) => (
+            <div
+              key={value}
+              className={`rounded-[24px] border p-4 ${
+                isDarkTheme
+                  ? "border-white/12 bg-white/10"
+                  : "border-orange-100 bg-white/90 shadow-sm"
+              }`}
+            >
+              <Icon className={`h-5 w-5 ${isDarkTheme ? "text-orange-400" : "text-orange-500"}`} />
+              <p className={`mt-4 text-sm font-bold uppercase tracking-[0.2em] ${
+                isDarkTheme ? "text-white/55" : "text-slate-500"
+              }`}>{value}</p>
+              <p className={`mt-2 text-sm leading-relaxed ${
+                isDarkTheme ? "text-white/82" : "text-slate-700"
+              }`}>{label}</p>
             </div>
           ))}
         </div>
-        <p className="mt-6 text-xs font-bold uppercase tracking-wide text-brand-300">Quick demo login</p>
-        <div className="mt-2 space-y-2">
-          {demoAccounts.map((acc) => (
-            <button
-              key={acc.email}
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => signIn({ email: acc.email, password: acc.password })}
-              className={`flex w-full items-center justify-between rounded-xl border-2 p-3 text-left transition hover:scale-[1.01] ${acc.color}`}
-            >
-              <div>
-                <span className="font-bold text-white">{acc.label}</span>
-                <span className="ml-2 rounded bg-white/10 px-2 py-0.5 text-[10px] font-bold text-brand-200">{acc.badge}</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-accent-400" />
-            </button>
-          ))}
+
+        <div className={`rounded-[28px] border p-5 ${
+          isDarkTheme
+            ? "border-white/12 bg-white/10"
+            : "border-orange-100 bg-white/90 shadow-card"
+        }`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className={`text-sm font-bold uppercase tracking-[0.22em] ${
+              isDarkTheme ? "text-white/60" : "text-slate-500"
+            }`}>Quick demo login</p>
+            <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] ${
+              isDarkTheme
+                ? "border border-white/15 text-orange-400"
+                : "border border-orange-100 bg-orange-50 text-orange-700"
+            }`}>
+              One click
+            </span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {demoAccounts.map((acc) => (
+              <motion.button
+                key={acc.email}
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => signIn({ email: acc.email, password: acc.password })}
+                whileHover={{ x: 6, scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className={`w-full rounded-[24px] border p-4 text-left transition ${
+                  isDarkTheme
+                    ? "border-white/15 bg-slate-950/35 hover:border-orange-500/50"
+                    : "border-orange-100 bg-orange-50/40 hover:border-orange-300 hover:bg-white"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className={`text-lg font-bold ${isDarkTheme ? "text-white" : "text-slate-900"}`}>{acc.label}</p>
+                    <p className={`mt-1 text-sm ${isDarkTheme ? "text-white/65" : "text-slate-600"}`}>{acc.description}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${
+                    isDarkTheme
+                      ? "bg-white/10 text-orange-400"
+                      : "bg-white text-orange-600 border border-orange-100 shadow-sm"
+                  }`}>
+                    {acc.badge}
+                  </span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
-    </>
-  );
+    );
+  }, [isSubmitting, signIn]);
 
   return (
     <AuthLayout sidePanel={sidePanel}>
-      <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Sign in</h2>
-      <p className="mt-1 text-sm text-slate-500">Your collaboration workspace awaits</p>
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <p className="festival-label">Team access</p>
+        <h2 className="mt-2 font-display text-4xl font-bold text-slate-900 dark:text-white">
+          Sign in to your sprint desk
+        </h2>
+        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+          Open your project feed, review requests, and jump back into live coordination.
+        </p>
+      </motion.div>
+
+      <motion.form
+        onSubmit={handleSubmit}
+        className="mt-8 space-y-5"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+      >
         <label className="block">
-          <span className="mb-1 text-xs font-bold text-brand-700 dark:text-brand-400">Email</span>
+          <span className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Email</span>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-400" />
-            <input className="input pl-10" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+            <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-500" />
+            <input
+              className="input h-14 pl-11 text-base"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="lead.demo@fmt.com"
+              required
+            />
           </div>
         </label>
+
         <label className="block">
-          <span className="mb-1 text-xs font-bold text-brand-700 dark:text-brand-400">Password</span>
+          <span className="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Password</span>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-400" />
-            <input className="input pl-10" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+            <KeyRound className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-500" />
+            <input
+              className="input h-14 pl-11 text-base"
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Enter your password"
+              required
+            />
           </div>
         </label>
+
         {error && (
-          <div className="flex gap-2 rounded-xl border-2 border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            <ShieldAlert className="h-5 w-5 shrink-0" /> {error}
+          <div className="flex gap-3 rounded-[24px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
-        <button type="submit" disabled={isSubmitting} className="btn-primary w-full py-3">
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Continue <ArrowRight className="h-4 w-4" /></>}
-        </button>
+
+        <motion.button
+          type="submit"
+          disabled={isSubmitting}
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.99 }}
+          className="btn-primary h-14 w-full text-base"
+        >
+          {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Enter workspace <ArrowRight className="h-4 w-4" /></>}
+        </motion.button>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/50 dark:text-slate-300">
+          <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-white">
+            <BadgeCheck className="h-4 w-4 text-emerald-500" />
+            Demo access hint
+          </div>
+          <p className="mt-1">Use the quick login cards on the left if you want to show the project instantly during a demo.</p>
+        </div>
+
         <p className="text-center text-sm text-slate-500">
-          New? <Link to="/register" className="font-bold text-brand-600 hover:text-brand-500">Create account</Link>
+          New here?{" "}
+          <Link to="/register" className="font-bold text-brand-600 hover:text-brand-500">
+            Create your account
+          </Link>
         </p>
-      </form>
+      </motion.form>
     </AuthLayout>
   );
 }

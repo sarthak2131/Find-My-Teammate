@@ -15,10 +15,13 @@ const GENERATED_AVATAR_URLS = [
   "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80",
 ];
 
-const createDefaultProfileImage = () => ({
-  url: DEFAULT_AVATAR,
-  publicId: "",
-});
+const createDefaultProfileImage = () => {
+  const seed = Math.floor(100000 + Math.random() * 900000);
+  return {
+    url: `https://api.dicebear.com/7.x/adventurer/svg?seed=${seed}`,
+    publicId: "",
+  };
+};
 
 module.exports = {
   DEFAULT_AVATAR,

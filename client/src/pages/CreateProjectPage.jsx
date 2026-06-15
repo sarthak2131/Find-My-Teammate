@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   UploadCloud,
@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { PROJECT_GENDER_OPTIONS } from "../utils/genderPreferences";
 import { compressImageFile } from "../utils/compressImage";
 import PageHeader from "../components/shared/PageHeader";
@@ -22,6 +23,7 @@ const initialForm = {
   title: "",
   description: "",
   requiredSkills: "",
+  maxMembers: "4",
   deadline: "",
   status: "open",
   preferredGender: "any",
@@ -33,12 +35,24 @@ const POPULAR_SKILLS = [
   "UI/UX Design", "Figma", "Machine Learning", "Flutter", "Java", "AWS", "Docker",
 ];
 
+const POPULAR_ROLE_NOTES = [
+  "Backend developer with Node.js/MongoDB experience",
+  "Frontend developer skilled in React & Tailwind CSS",
+  "UI/UX Designer to design high-fidelity Figma screens",
+  "Fullstack developer for end-to-end features",
+  "Machine Learning engineer for data pipelines and modeling",
+  "Mobile developer with Flutter/React Native experience",
+  "DevOps engineer with Docker & AWS deployment knowledge",
+  "Data scientist with Python & Pandas skills"
+];
+
 export default function CreateProjectPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
   const fileInputRef = useRef(null);
   const autocompleteRef = useRef(null);
+  const { user } = useAuth();
 
   const [form, setForm] = useState(initialForm);
   const [posterFile, setPosterFile] = useState(null);
@@ -48,6 +62,10 @@ export default function CreateProjectPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [skillsSuggestions, setSkillsSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [roleSuggestions, setRoleSuggestions] = useState([]);
+  const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
+  const roleAutocompleteRef = useRef(null);
+
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -57,6 +75,7 @@ export default function CreateProjectPage() {
         title: project.title || "",
         description: project.description || "",
         requiredSkills: (project.requiredSkills || []).join(", "),
+        maxMembers: String(project.maxMembers || 4),
         deadline: project.deadline ? new Date(project.deadline).toISOString().substring(0, 10) : "",
         status: project.status || "open",
         preferredGender: project.preferredGender || "any",
@@ -71,10 +90,33 @@ export default function CreateProjectPage() {
       if (autocompleteRef.current && !autocompleteRef.current.contains(e.target)) {
         setShowSuggestions(false);
       }
+      if (roleAutocompleteRef.current && !roleAutocompleteRef.current.contains(e.target)) {
+        setShowRoleSuggestions(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const handleRoleNoteChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, preferredTeammateNote: value }));
+    if (!value.trim()) {
+      setRoleSuggestions(POPULAR_ROLE_NOTES.slice(0, 4));
+      setShowRoleSuggestions(true);
+      return;
+    }
+    const matches = POPULAR_ROLE_NOTES.filter(n =>
+      n.toLowerCase().includes(value.toLowerCase())
+    );
+    setRoleSuggestions(matches);
+    setShowRoleSuggestions(matches.length > 0);
+  };
+
+  const selectRoleSuggestion = (note) => {
+    setForm((prev) => ({ ...prev, preferredTeammateNote: note }));
+    setShowRoleSuggestions(false);
+  };
 
   const clearPoster = () => {
     if (posterPreview?.startsWith("blob:")) URL.revokeObjectURL(posterPreview);
@@ -135,10 +177,10 @@ export default function CreateProjectPage() {
       else if (isEditMode) payload.append("posterUrl", posterPreview || "");
 
       if (isEditMode) {
-        await api.put(`/projects/${id}`, payload, { headers: { "Content-Type": "multipart/form-data" } });
+        await api.put(`/projects/${id}`, payload);
         navigate(`/projects/${id}`);
       } else {
-        await api.post("/projects/create", payload, { headers: { "Content-Type": "multipart/form-data" } });
+        await api.post("/projects/create", payload);
         navigate("/dashboard");
       }
     } catch (requestError) {
@@ -167,6 +209,9 @@ export default function CreateProjectPage() {
       />
 
       <form onSubmit={handleSubmit} className="surface space-y-0 divide-y-2 divide-brand-100 p-0 dark:divide-brand-900/50">
+        
+
+
         <div className="space-y-5 p-6">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-brand-600">
             <Target className="h-4 w-4" /> Basics
@@ -189,6 +234,18 @@ export default function CreateProjectPage() {
                 <option value="in-progress">In progress</option>
                 <option value="closed">Closed</option>
               </select>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Team capacity</span>
+              <input
+                className="input"
+                type="number"
+                min="1"
+                max="12"
+                value={form.maxMembers}
+                onChange={(e) => setForm({ ...form, maxMembers: e.target.value })}
+                placeholder="4"
+              />
             </label>
           </div>
           <label className="block">
@@ -258,10 +315,43 @@ export default function CreateProjectPage() {
                 ))}
               </select>
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Role note</span>
-              <input className="input" value={form.preferredTeammateNote} onChange={(e) => setForm({ ...form, preferredTeammateNote: e.target.value })} placeholder="e.g. Backend dev with ML…" maxLength={200} />
-            </label>
+            <div className="relative" ref={roleAutocompleteRef}>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Role note</span>
+                <input 
+                  className="input" 
+                  value={form.preferredTeammateNote} 
+                  onChange={handleRoleNoteChange}
+                  onFocus={() => {
+                    if (!form.preferredTeammateNote.trim()) {
+                      setRoleSuggestions(POPULAR_ROLE_NOTES.slice(0, 4));
+                    } else {
+                      const matches = POPULAR_ROLE_NOTES.filter(n =>
+                        n.toLowerCase().includes(form.preferredTeammateNote.toLowerCase())
+                      );
+                      setRoleSuggestions(matches);
+                    }
+                    setShowRoleSuggestions(true);
+                  }}
+                  placeholder="e.g. Backend dev with ML…" 
+                  maxLength={200} 
+                />
+              </label>
+              {showRoleSuggestions && roleSuggestions.length > 0 && (
+                <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-xl border-2 border-brand-200 bg-white shadow-card dark:border-brand-800 dark:bg-[#0c1824]">
+                  {roleSuggestions.map((note) => (
+                    <button 
+                      key={note} 
+                      type="button" 
+                      onClick={() => selectRoleSuggestion(note)} 
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40"
+                    >
+                      <Zap className="h-3.5 w-3.5 text-accent-500" /> {note}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

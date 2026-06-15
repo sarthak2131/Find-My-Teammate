@@ -1,16 +1,25 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState, useRef } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Users, BadgeCheck, Filter, Compass } from "lucide-react";
 import api from "../services/api";
 import UserCard from "../components/shared/UserCard";
+import UserCardSkeleton from "../components/shared/UserCardSkeleton";
 import EmptyState from "../components/shared/EmptyState";
 import PageHeader from "../components/shared/PageHeader";
 import { useSocketContext } from "../context/SocketContext";
 import { useAuth } from "../context/AuthContext";
 import { getProjectGenderLabel } from "../utils/genderPreferences";
+import { getProjectOpenSpots, isProjectFull } from "../utils/projectInsights";
 
 export default function ExplorePage() {
   const { user } = useAuth();
-  const [query, setQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const [query, setQuery] = useState(initialSearch);
+
+  useEffect(() => {
+    setQuery(searchParams.get("search") || "");
+  }, [searchParams]);
   const [users, setUsers] = useState([]);
   const [myProjects, setMyProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -20,6 +29,45 @@ export default function ExplorePage() {
   const [contextLoading, setContextLoading] = useState(true);
   const deferredQuery = useDeferredValue(query);
   const { onlineUsers } = useSocketContext();
+  const autocompleteRef = useRef(null);
+
+  // Skill Suggestions States
+  const [skillsSuggestions, setSkillsSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const POPULAR_SKILLS = [
+    "React", "Next.js", "Node.js", "Python", "Django", "MongoDB", "Tailwind CSS",
+    "UI/UX Design", "Figma", "Machine Learning", "Flutter", "Java", "AWS", "Docker", "C++", "JavaScript", "TypeScript"
+  ];
+
+  const handleQueryChange = (val) => {
+    const term = val.trim();
+    if (!term) {
+      setSkillsSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const matches = POPULAR_SKILLS.filter(
+      (s) => s.toLowerCase().includes(term.toLowerCase()) && s.toLowerCase() !== term.toLowerCase()
+    ).slice(0, 6);
+    setSkillsSuggestions(matches);
+    setShowSuggestions(matches.length > 0);
+  };
+
+  const selectSkillSuggestion = (skill) => {
+    setQuery(skill);
+    setShowSuggestions(false);
+  };
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -61,7 +109,9 @@ export default function ExplorePage() {
           }),
         ]);
 
-        const ownedProjects = projectsResponse.data.projects || [];
+        const ownedProjects = (projectsResponse.data.projects || []).filter(
+          (project) => !project.isShowcase && !project.description?.includes("GitHub: https://github.com/")
+        );
         setMyProjects(ownedProjects);
         setRequests(requestsResponse.data.requests || []);
 
@@ -175,6 +225,15 @@ export default function ExplorePage() {
       };
     }
 
+    if (isProjectFull(selectedProject)) {
+      return {
+        label: "Team Full",
+        disabled: true,
+        statusText: `"${selectedProject.title}" has no open spots right now.`,
+        style: "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50"
+      };
+    }
+
     return {
       label: "Invite Teammate",
       disabled: false,
@@ -204,17 +263,33 @@ export default function ExplorePage() {
               <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Search by skill or name
               </span>
-              <div className="relative">
+              <div className="relative" ref={autocompleteRef}>
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input
                   className="input pl-11"
                   value={query}
                   onChange={(event) => {
                     const nextValue = event.target.value;
-                    startTransition(() => setQuery(nextValue));
+                    setQuery(nextValue);
+                    handleQueryChange(nextValue);
                   }}
                   placeholder="Type skills e.g., Python, React, Next.js, Figma, Django..."
                 />
+                
+                {showSuggestions && (
+                  <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-xl border-2 border-brand-200 bg-white shadow-card dark:border-brand-800 dark:bg-[#0c1824]">
+                    {skillsSuggestions.map((skill) => (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => selectSkillSuggestion(skill)}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40"
+                      >
+                        <Compass className="h-3.5 w-3.5 text-brand-500" /> {skill}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </label>
 
@@ -259,6 +334,11 @@ export default function ExplorePage() {
                 <p className="mt-0.5 text-xs text-slate-500">
                   Pick an open project to enable invite buttons on profiles.
                 </p>
+                {selectedProject ? (
+                  <p className="mt-1 text-[11px] font-semibold text-brand-600 dark:text-brand-300">
+                    {getProjectOpenSpots(selectedProject)} spots left in {selectedProject.title}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -284,7 +364,7 @@ export default function ExplorePage() {
 
           {/* Live Action Alert Feedback */}
           {feedback ? (
-            <div className="mt-6 flex items-center gap-2 rounded-xl border border-mint-500/30 bg-mint-500/10 px-4 py-3 text-xs font-semibold text-mint-600 dark:text-mint-400">
+            <div className="mt-6 flex items-center gap-2 rounded-xl border border-success-500/30 bg-success-500/10 px-4 py-3 text-xs font-semibold text-success-600 dark:text-success-400">
               <BadgeCheck className="h-4 w-4 shrink-0" />
               <span>{feedback}</span>
             </div>
@@ -295,10 +375,12 @@ export default function ExplorePage() {
       {/* 4. Hacker Cards Directory Grid */}
       <section className="grid gap-6 md:grid-cols-2">
         {loading ? (
-          <div className="col-span-2 py-16 text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-brand-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-4 text-xs font-semibold text-slate-500">Searching…</p>
-          </div>
+          <>
+            <UserCardSkeleton />
+            <UserCardSkeleton />
+            <UserCardSkeleton />
+            <UserCardSkeleton />
+          </>
         ) : null}
 
         {!loading && users.length === 0 ? (
@@ -337,4 +419,3 @@ export default function ExplorePage() {
     </div>
   );
 }
-

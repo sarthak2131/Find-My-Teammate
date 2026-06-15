@@ -66,6 +66,11 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password.");
   }
 
+  if (user.isSuspended) {
+    res.status(403);
+    throw new Error("Your account has been suspended by the administrator.");
+  }
+
   res.json(buildAuthPayload(user));
 });
 

@@ -1,5 +1,6 @@
 const Project = require("../models/Project");
 const Request = require("../models/Request");
+const Report = require("../models/Report");
 const asyncHandler = require("../middleware/asyncHandler");
 const { PROJECT_GENDER_PREFERENCES } = require("../constants/genderPreferences");
 const { hasCloudinaryConfig } = require("../config/cloudinary");
@@ -43,11 +44,21 @@ const normaliseList = (value) => {
   return [];
 };
 
+const parseMaxMembers = (value, fallback = 4) => {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(12, Math.max(1, parsed));
+};
+
 const createProject = asyncHandler(async (req, res) => {
   const {
     title,
     description,
     requiredSkills,
+    maxMembers,
     deadline,
     status,
     preferredGender,
@@ -63,6 +74,7 @@ const createProject = asyncHandler(async (req, res) => {
     title,
     description,
     requiredSkills: normaliseList(requiredSkills),
+    maxMembers: parseMaxMembers(maxMembers, 4),
     deadline: deadline || undefined,
     status: status || "open",
     preferredGender: PROJECT_GENDER_PREFERENCES.includes(preferredGender) ? preferredGender : "any",
@@ -71,6 +83,7 @@ const createProject = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
     teamLead: req.user._id,
     members: [req.user._id],
+    isShowcase: req.body.isShowcase === "true" || req.body.isShowcase === true,
   });
 
   const populatedProject = await Project.findById(project._id)
@@ -81,7 +94,7 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const getProjects = asyncHandler(async (req, res) => {
-  const { status, search, skill, mine, owner, excludeOwner, preferredGender, liked } = req.query;
+  const { status, search, skill, mine, owner, excludeOwner, preferredGender, liked, excludeShowcase } = req.query;
   const filters = [];
 
   if (status) {
@@ -104,6 +117,10 @@ const getProjects = asyncHandler(async (req, res) => {
 
   if (excludeOwner === "true") {
     filters.push({ createdBy: { $ne: req.user._id } });
+  }
+
+  if (excludeShowcase === "true") {
+    filters.push({ isShowcase: { $ne: true } });
   }
 
   if (skill) {
@@ -179,6 +196,7 @@ const deleteProject = asyncHandler(async (req, res) => {
   }
 
   await Request.deleteMany({ projectId: project._id });
+  await Report.deleteMany({ project: project._id });
   await project.deleteOne();
 
   res.json({ message: "Project deleted successfully." });
@@ -237,6 +255,7 @@ const updateProject = asyncHandler(async (req, res) => {
     title,
     description,
     requiredSkills,
+    maxMembers,
     deadline,
     status,
     preferredGender,
@@ -261,6 +280,16 @@ const updateProject = asyncHandler(async (req, res) => {
   if (title) project.title = title;
   if (description) project.description = description;
   if (requiredSkills !== undefined) project.requiredSkills = normaliseList(requiredSkills);
+  if (maxMembers !== undefined) {
+    const nextMaxMembers = parseMaxMembers(maxMembers, project.maxMembers || 4);
+
+    if ((project.members?.length || 0) > nextMaxMembers) {
+      res.status(400);
+      throw new Error("Max members cannot be less than the current team size.");
+    }
+
+    project.maxMembers = nextMaxMembers;
+  }
   if (deadline !== undefined) project.deadline = deadline || undefined;
   if (status !== undefined) project.status = status || "open";
   if (preferredGender !== undefined) {

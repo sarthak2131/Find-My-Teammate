@@ -6,7 +6,7 @@ const getInitialTheme = () => {
     return savedTheme;
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 };
 
 export default function useTheme() {
@@ -23,4 +23,3 @@ export default function useTheme() {
 
   return { theme, toggleTheme };
 }
-

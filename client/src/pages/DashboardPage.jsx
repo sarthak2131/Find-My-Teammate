@@ -7,6 +7,7 @@ import StatCard from "../components/shared/StatCard";
 import EmptyState from "../components/shared/EmptyState";
 import PageHeader from "../components/shared/PageHeader";
 import { getProjectEligibility } from "../utils/genderPreferences";
+import { getProjectOpenSpots, getProjectReadiness, isProjectFull } from "../utils/projectInsights";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -88,7 +89,7 @@ export default function DashboardPage() {
         {/* Hosted Squad Proposals Panel */}
         <div className="surface flex h-full flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-150 dark:border-slate-800/60">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800/60">
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">Hosted</p>
                 <h2 className="font-display text-xl font-bold text-slate-900 dark:text-white md:text-2xl">Your projects</h2>
@@ -121,7 +122,12 @@ export default function DashboardPage() {
 
               {!loading
                 ? projects.map((project) => (
-                    <div key={project._id} className="p-4 rounded-xl border border-slate-200/50 dark:border-slate-850/60 bg-slate-50/50 dark:bg-slate-950/20 hover:border-brand-500/20 transition-all duration-300 flex items-start justify-between gap-4">
+                    (() => {
+                      const readiness = getProjectReadiness(project);
+                      const openSpots = getProjectOpenSpots(project);
+
+                      return (
+                    <div key={project._id} className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/50 bg-slate-50/50 p-4 transition-all duration-300 hover:border-brand-500/20 dark:border-slate-800/60 dark:bg-slate-950/20">
                       <div className="space-y-3 flex-1">
                         <span className={`inline-block text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                           project.status === "open" 
@@ -132,15 +138,25 @@ export default function DashboardPage() {
                         </span>
                         
                         <h3 className="text-base font-black text-slate-800 dark:text-white leading-tight font-display">{project.title}</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-350 leading-relaxed line-clamp-2">
+                        <p className="line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-300">
                           {project.description}
                         </p>
+                        <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
+                          <span className="rounded-lg bg-brand-50 px-2 py-1 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
+                            Readiness {readiness.score}%
+                          </span>
+                          <span className="rounded-lg bg-slate-100 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            {openSpots} open spots
+                          </span>
+                        </div>
                       </div>
 
                       <Link to={`/projects/${project._id}`} className="btn-secondary py-2 px-3.5 text-xs font-bold rounded-lg shrink-0">
                         View project
                       </Link>
                     </div>
+                      );
+                    })()
                   ))
                 : null}
             </div>
@@ -148,9 +164,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Pending approvals application panel */}
-        <div className="surface flex h-full flex-col justify-between">
+        <div className="surface sticky top-28 self-start flex flex-col justify-between">
           <div>
-            <div className="pb-4 border-b border-slate-150 dark:border-slate-800/60 mb-6">
+            <div className="mb-6 border-b border-slate-200 pb-4 dark:border-slate-800/60">
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">Incoming</p>
               <h2 className="mt-1 font-display text-xl font-bold text-slate-900 dark:text-white md:text-2xl">Pending requests</h2>
             </div>
@@ -164,12 +180,13 @@ export default function DashboardPage() {
               ) : null}
 
               {incomingRequests.map((request) => (
-                <div key={request._id} className="p-4 rounded-xl border border-slate-200/50 dark:border-slate-850/60 bg-slate-50/50 dark:bg-slate-950/20 space-y-3">
+                <div key={request._id} className="space-y-3 rounded-xl border border-slate-200/50 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-950/20">
                   {(() => {
                     const inviteEligibility =
                       request.requestType === "invite"
                         ? getProjectEligibility({ project: request.projectId, user })
                         : { allowed: true, message: "" };
+                    const projectFull = isProjectFull(request.projectId);
 
                     return (
                       <>
@@ -197,14 +214,14 @@ export default function DashboardPage() {
                               type="button"
                               onClick={() => handleRequestAction(request._id, "accept")}
                               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-extrabold border transition-all ${
-                                inviteEligibility.allowed
+                                inviteEligibility.allowed && !projectFull
                                   ? "btn-primary shadow-glow hover:border-brand-500"
-                                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-850 cursor-not-allowed opacity-50"
+                                  : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-500"
                               }`}
-                              disabled={!inviteEligibility.allowed}
+                              disabled={!inviteEligibility.allowed || projectFull}
                             >
                               <Check className="h-3.5 w-3.5" />
-                              <span>{inviteEligibility.allowed ? "Accept" : "Ineligible"}</span>
+                              <span>{projectFull ? "Team full" : inviteEligibility.allowed ? "Accept" : "Ineligible"}</span>
                             </button>
                             
                             <button
@@ -218,10 +235,10 @@ export default function DashboardPage() {
                           </div>
                         ) : null}
 
-                        {!inviteEligibility.allowed && (
+                        {(!inviteEligibility.allowed || projectFull) && (
                           <div className="p-2.5 rounded-lg bg-red-500/5 border border-red-500/10 flex items-start gap-1.5 text-[11px] font-semibold text-red-400">
                             <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-                            <span>{inviteEligibility.message}</span>
+                            <span>{projectFull ? "This project is already full. Increase capacity or clear a spot before accepting." : inviteEligibility.message}</span>
                           </div>
                         )}
                       </>
@@ -237,4 +254,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

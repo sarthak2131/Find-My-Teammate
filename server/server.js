@@ -14,6 +14,7 @@ const projectRoutes = require("./routes/projectRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const initSocketServer = require("./sockets/socketServer");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const { ensureDemoUsers } = require("./config/seedDemoUsers");
@@ -65,6 +66,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

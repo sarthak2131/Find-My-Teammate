@@ -6,11 +6,20 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import ReportModal from "../components/shared/ReportModal";
 import { formatDate, formatDateTime } from "../utils/formatters";
 import Avatar from "../components/shared/Avatar";
 import EmptyState from "../components/shared/EmptyState";
 import PageHeader from "../components/shared/PageHeader";
 import { getProjectEligibility, getProjectGenderLabel } from "../utils/genderPreferences";
+import {
+  getProjectCapacity,
+  getProjectFitInsights,
+  getProjectOpenSpots,
+  getProjectReadiness,
+  getProjectTimelineInsight,
+  isProjectFull,
+} from "../utils/projectInsights";
 
 export default function ProjectDetailsPage() {
   const { id } = useParams();
@@ -20,6 +29,14 @@ export default function ProjectDetailsPage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState("");
+  const [showReportModal, setShowReportModal] = useState(false);
+
+  const handleReportSubmit = async (reason) => {
+    await api.post("/reports", {
+      projectId: project._id,
+      reason,
+    });
+  };
 
   const loadProject = async () => {
     setLoading(true);
@@ -49,6 +66,12 @@ export default function ProjectDetailsPage() {
     existingRequest?.status === "pending";
   const canManageRequests = isOwner || isAdmin;
   const canManageMembers = isOwner || isAdmin;
+  const capacity = getProjectCapacity(project);
+  const openSpots = getProjectOpenSpots(project);
+  const projectIsFull = isProjectFull(project);
+  const fitInsights = getProjectFitInsights(project, user);
+  const readiness = getProjectReadiness(project);
+  const timeline = getProjectTimelineInsight(project);
 
   const handleRequestJoin = async () => {
     try {
@@ -126,6 +149,11 @@ export default function ProjectDetailsPage() {
           <button type="button" onClick={handleBookmark} className={`btn-secondary text-sm ${isBookmarked ? "!border-brand-400 !bg-brand-50 !text-brand-700" : ""}`}>
             <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-brand-500" : ""}`} /> {isBookmarked ? "Saved" : "Save"}
           </button>
+          {!isOwner && (
+            <button type="button" onClick={() => setShowReportModal(true)} className="btn-secondary text-sm !text-red-500 hover:!bg-red-50 dark:hover:!bg-red-950/20">
+              Report
+            </button>
+          )}
           {(isOwner || isAdmin) && (
             <>
               <Link to={`/projects/${project._id}/edit`} className="btn-secondary text-sm"><Pencil className="h-4 w-4" /> Edit</Link>
@@ -144,7 +172,7 @@ export default function ProjectDetailsPage() {
         description={project.description}
         stats={[
           { label: "Deadline", value: formatDate(project.deadline) || "—" },
-          { label: "Members", value: project.members?.length || 0 },
+          { label: "Members", value: `${project.members?.length || 0}/${capacity}` },
           { label: "Skills", value: (project.requiredSkills || []).length },
         ]}
       >
@@ -168,21 +196,70 @@ export default function ProjectDetailsPage() {
             </div>
           )}
 
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="surface-muted border-brand-100 bg-brand-50/60 dark:border-brand-900/40 dark:bg-brand-950/20">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-brand-600 dark:text-brand-300">Match score</p>
+              <p className="mt-2 text-2xl font-extrabold text-brand-800 dark:text-white">{fitInsights.fitScore}%</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{fitInsights.verdict}</p>
+            </div>
+            <div className="surface-muted border-slate-200 bg-slate-50/70 dark:border-slate-700/50 dark:bg-slate-900/20">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Capacity</p>
+              <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{openSpots} spots</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{project.members?.length || 0}/{capacity} filled</p>
+            </div>
+            <div className="surface-muted border-accent-100 bg-accent-50/60 dark:border-accent-900/30 dark:bg-accent-950/10">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-accent-600 dark:text-accent-300">Project readiness</p>
+              <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{readiness.score}%</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{timeline.label}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500"
+                style={{ width: `${Math.max(10, Math.round(((project.members?.length || 0) / capacity) * 100))}%` }}
+              />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900/30 dark:bg-emerald-950/10">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Skills you match</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {fitInsights.matchedSkills.length > 0 ? fitInsights.matchedSkills.map((skill) => (
+                    <span key={skill} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-slate-900 dark:text-emerald-300">
+                      {skill}
+                    </span>
+                  )) : <span className="text-sm text-slate-500 dark:text-slate-400">Add more matching skills to improve your fit.</span>}
+                </div>
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-950/10">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Skill gaps to cover</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {fitInsights.missingSkills.length > 0 ? fitInsights.missingSkills.slice(0, 4).map((skill) => (
+                    <span key={skill} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-amber-700 dark:bg-slate-900 dark:text-amber-300">
+                      {skill}
+                    </span>
+                  )) : <span className="text-sm text-slate-500 dark:text-slate-400">You already cover all listed skills.</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-3">
             {(isOwner || isMember) ? (
               <Link to="/dashboard" className="btn-primary">Manage in dashboard</Link>
             ) : canRespondToInvite ? (
               <>
-                <button type="button" onClick={() => handleRequestAction(existingRequest._id, "accept")} disabled={!eligibility.allowed} className="btn-primary !from-success-600 !to-success-500">
-                  <Check className="h-4 w-4" /> Accept invite
+                <button type="button" onClick={() => handleRequestAction(existingRequest._id, "accept")} disabled={!eligibility.allowed || projectIsFull} className="btn-primary !from-success-600 !to-success-500">
+                  <Check className="h-4 w-4" /> {projectIsFull ? "Team full" : "Accept invite"}
                 </button>
                 <button type="button" onClick={() => handleRequestAction(existingRequest._id, "reject")} className="btn-secondary">Decline</button>
               </>
             ) : existingRequest ? (
               <span className="chip-accent">Status: {existingRequest.status}</span>
             ) : (
-              <button type="button" onClick={handleRequestJoin} disabled={!eligibility.allowed} className="btn-primary">
-                <UserPlus className="h-4 w-4" /> {eligibility.allowed ? "Request to join" : "Not eligible"}
+              <button type="button" onClick={handleRequestJoin} disabled={!eligibility.allowed || projectIsFull} className="btn-primary">
+                <UserPlus className="h-4 w-4" /> {projectIsFull ? "Team full" : eligibility.allowed ? "Request to join" : "Not eligible"}
               </button>
             )}
             {canMessageLead && (
@@ -191,6 +268,11 @@ export default function ProjectDetailsPage() {
           </div>
 
           {feedback && <div className="rounded-xl border-2 border-brand-200 bg-brand-50 p-3 text-sm text-brand-800">{feedback}</div>}
+          {projectIsFull && !isOwner && !isMember && (
+            <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+              This team is currently full. You can still bookmark it and track whether a spot opens up.
+            </div>
+          )}
           {!eligibility.allowed && !isOwner && !isMember && (
             <div className="rounded-xl border-2 border-red-200 bg-red-50 p-3 text-sm text-red-700">{eligibility.message}</div>
           )}
@@ -258,7 +340,9 @@ export default function ProjectDetailsPage() {
                   </div>
                   {canManageRequests && request.status === "pending" && (
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => handleRequestAction(request._id, "accept")} className="btn-primary py-1.5 text-xs">Accept</button>
+                      <button type="button" onClick={() => handleRequestAction(request._id, "accept")} disabled={projectIsFull} className="btn-primary py-1.5 text-xs disabled:opacity-50">
+                        {projectIsFull ? "Full" : "Accept"}
+                      </button>
                       <button type="button" onClick={() => handleRequestAction(request._id, "reject")} className="btn-secondary py-1.5 text-xs">Reject</button>
                     </div>
                   )}
@@ -268,6 +352,13 @@ export default function ProjectDetailsPage() {
           )}
         </div>
       )}
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportSubmit}
+        projectTitle={project?.title || ""}
+      />
     </div>
   );
 }

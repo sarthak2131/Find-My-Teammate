@@ -31,6 +31,18 @@ const getUserId = (value) => {
   return value.toString();
 };
 
+const getProjectCapacity = (project) => Math.min(12, Math.max(1, Number(project?.maxMembers) || 4));
+
+const ensureProjectHasCapacity = ({ project, res, actionLabel = "add more teammates" }) => {
+  const currentMembers = project?.members?.length || 0;
+  const maxMembers = getProjectCapacity(project);
+
+  if (currentMembers >= maxMembers) {
+    res.status(400);
+    throw new Error(`This project is already full, so you cannot ${actionLabel}.`);
+  }
+};
+
 const ensureGenderMatch = ({ candidate, project, res, actionLabel = "join this project" }) => {
   if (!project || project.preferredGender === "any") {
     return;
@@ -97,6 +109,12 @@ const sendRequest = asyncHandler(async (req, res) => {
       throw new Error("You are already part of this team.");
     }
 
+    ensureProjectHasCapacity({
+      project,
+      res,
+      actionLabel: "join this project right now",
+    });
+
     ensureGenderMatch({
       candidate: req.user,
       project,
@@ -129,6 +147,12 @@ const sendRequest = asyncHandler(async (req, res) => {
       res.status(400);
       throw new Error("This teammate is already in your project.");
     }
+
+    ensureProjectHasCapacity({
+      project,
+      res,
+      actionLabel: "invite more teammates to this project",
+    });
 
     const targetUser = await User.findById(receiver);
 
@@ -212,7 +236,7 @@ const getRequests = asyncHandler(async (req, res) => {
   const requests = await Request.find(filters)
     .populate("sender", "name email profileImage skills")
     .populate("receiver", "name email profileImage")
-    .populate("projectId", "title status createdBy deadline preferredGender preferredTeammateNote")
+    .populate("projectId", "title status createdBy deadline preferredGender preferredTeammateNote members maxMembers")
     .sort({ createdAt: -1 });
 
   res.json({ requests });
@@ -256,6 +280,12 @@ const acceptRequest = asyncHandler(async (req, res) => {
     request.requestType === "invite"
       ? { _id: request.receiver._id.toString(), gender: request.receiver.gender }
       : { _id: request.sender._id.toString(), gender: request.sender.gender };
+
+  ensureProjectHasCapacity({
+    project,
+    res,
+    actionLabel: "accept more teammates into this project",
+  });
 
   ensureGenderMatch({
     candidate: memberToAdd,

@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import ProjectCard from "../components/shared/ProjectCard";
 import EmptyState from "../components/shared/EmptyState";
 import PageHeader from "../components/shared/PageHeader";
+import ReportModal from "../components/shared/ReportModal";
 
 export default function LikesPage() {
   const { user, updateLocalUser } = useAuth();
@@ -13,6 +14,15 @@ export default function LikesPage() {
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState("");
   const [requests, setRequests] = useState([]);
+  const [reportTarget, setReportTarget] = useState(null);
+
+  const handleReportSubmit = async (reason) => {
+    if (!reportTarget) return;
+    await api.post("/reports", {
+      projectId: reportTarget._id,
+      reason,
+    });
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -113,24 +123,34 @@ export default function LikesPage() {
       )}
 
       {!loading && (
-        <div className="grid gap-5 md:grid-cols-2">
-          {projects.map((project) => {
-            const projectRequest = requests.find(
-              (r) => (r.projectId?._id || r.projectId) === project._id
-            );
-            return (
-              <ProjectCard
-                key={project._id}
-                project={project}
-                currentUser={user}
-                onRequestJoin={handleRequestJoin}
-                onBookmark={handleBookmark}
-                onDelete={handleDelete}
-                projectRequest={projectRequest}
-              />
-            );
-          })}
-        </div>
+        <>
+          <div className="grid gap-5 md:grid-cols-2">
+            {projects.map((project) => {
+              const projectRequest = requests.find(
+                (r) => (r.projectId?._id || r.projectId) === project._id
+              );
+              return (
+                <ProjectCard
+                  key={project._id}
+                  project={project}
+                  currentUser={user}
+                  onRequestJoin={handleRequestJoin}
+                  onBookmark={handleBookmark}
+                  onDelete={handleDelete}
+                  projectRequest={projectRequest}
+                  onReport={setReportTarget}
+                />
+              );
+            })}
+          </div>
+
+          <ReportModal
+            isOpen={!!reportTarget}
+            onClose={() => setReportTarget(null)}
+            onSubmit={handleReportSubmit}
+            projectTitle={reportTarget?.title || ""}
+          />
+        </>
       )}
     </div>
   );

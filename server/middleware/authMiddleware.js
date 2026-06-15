@@ -21,6 +21,11 @@ const protect = asyncHandler(async (req, res, next) => {
       throw new Error("User linked to this token no longer exists.");
     }
 
+    if (user.isSuspended) {
+      res.status(403);
+      throw new Error("Your account has been suspended by the administrator.");
+    }
+
     req.user = user;
     next();
   } catch (error) {

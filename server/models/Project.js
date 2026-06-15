@@ -44,6 +44,12 @@ const projectSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    maxMembers: {
+      type: Number,
+      default: 4,
+      min: 1,
+      max: 12,
+    },
     status: {
       type: String,
       enum: ["open", "in-progress", "closed"],
@@ -62,6 +68,10 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: "",
       trim: true,
+    },
+    isShowcase: {
+      type: Boolean,
+      default: false,
     },
   },
   {
