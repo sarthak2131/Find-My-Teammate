@@ -1,4 +1,5 @@
 import { Bell, CheckCheck, Users, Zap, MessageSquare, Award } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSocketContext } from "../context/SocketContext";
 import PageHeader from "../components/shared/PageHeader";
@@ -28,6 +29,14 @@ export default function NotificationsPage() {
   } = useSocketContext();
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  // Auto-mark all as read when the page is opened
+  useEffect(() => {
+    if (notificationsLoaded && unreadCount > 0) {
+      markAllNotificationsRead().catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationsLoaded]);
 
   return (
     <div className="space-y-6 page-enter">

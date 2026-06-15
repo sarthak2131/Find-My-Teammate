@@ -10,7 +10,7 @@ import Avatar from "../components/shared/Avatar";
 
 export default function ChatPage() {
   const { user } = useAuth();
-  const { onlineUsers, lastMessage, clearLastMessage, typingUsers, emitTyping } = useSocketContext();
+  const { onlineUsers, lastMessage, clearLastMessage, typingUsers, emitTyping, notifications, markNotificationRead } = useSocketContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(searchParams.get("user") || "");
@@ -80,6 +80,17 @@ export default function ChatPage() {
     };
     loadMessages();
   }, [selectedUserId]);
+
+  // Auto-mark unread message notifications from the active chat partner as read
+  useEffect(() => {
+    if (!selectedUserId) return;
+    const unread = notifications.filter(
+      (n) => !n.isRead && n.type === "message" && n.referenceId === selectedUserId
+    );
+    unread.forEach((n) => {
+      markNotificationRead(n._id).catch(() => {});
+    });
+  }, [selectedUserId, notifications, markNotificationRead]);
 
   useEffect(() => {
     if (!lastMessage) return;
