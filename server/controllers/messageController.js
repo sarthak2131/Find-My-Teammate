@@ -108,8 +108,8 @@ const sendMessage = asyncHandler(async (req, res) => {
     userId: receiver,
     text: `New message from ${req.user.name}.`,
     type: "message",
-    referenceId: createdMessage._id,
-    referenceModel: "Message",
+    referenceId: req.user._id,
+    referenceModel: "User",
   });
 
   emitMessage(req, receiver, populatedMessage);

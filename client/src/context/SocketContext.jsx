@@ -13,6 +13,7 @@ export function SocketProvider({ children }) {
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [typingUsers, setTypingUsers] = useState({});
+  const [activeToast, setActiveToast] = useState(null);
 
   const mergeNotifications = (items) => {
     const uniqueNotifications = [];
@@ -38,6 +39,7 @@ export function SocketProvider({ children }) {
       setNotificationsLoaded(false);
       setLastMessage(null);
       setTypingUsers({});
+      setActiveToast(null);
       return undefined;
     }
 
@@ -77,6 +79,7 @@ export function SocketProvider({ children }) {
 
     nextSocket.on("notification:new", (notification) => {
       setNotifications((current) => mergeNotifications([notification, ...current]));
+      setActiveToast(notification);
     });
 
     nextSocket.on("message:new", (message) => {
@@ -116,6 +119,8 @@ export function SocketProvider({ children }) {
     unreadNotificationsCount,
     lastMessage,
     typingUsers,
+    activeToast,
+    clearActiveToast: () => setActiveToast(null),
     clearLastMessage: () => setLastMessage(null),
     markNotificationRead: async (notificationId) => {
       const { data } = await api.put(`/notifications/${notificationId}/read`);

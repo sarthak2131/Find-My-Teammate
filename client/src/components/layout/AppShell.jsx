@@ -58,11 +58,52 @@ const POPULAR_SKILLS = [
   "UI/UX Design", "Figma", "Machine Learning", "Flutter", "Java", "AWS", "Docker", "C++", "JavaScript", "TypeScript"
 ];
 
+const toastIconMap = {
+  message: MessageSquare,
+  request: Users,
+  "request-update": Users,
+  system: Bell,
+};
+
 export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { unreadNotificationsCount } = useSocketContext();
+  const {
+    unreadNotificationsCount,
+    activeToast,
+    clearActiveToast,
+    markNotificationRead,
+  } = useSocketContext();
+
+  useEffect(() => {
+    if (activeToast) {
+      const timer = setTimeout(() => {
+        clearActiveToast();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeToast, clearActiveToast]);
+
+  const handleToastClick = async () => {
+    if (!activeToast) return;
+    const toast = activeToast;
+    clearActiveToast();
+
+    try {
+      await markNotificationRead(toast._id);
+    } catch (err) {
+      console.error("Failed to mark notification read:", err);
+    }
+
+    if (toast.type === "message") {
+      navigate(`/chat?user=${toast.referenceId}`);
+    } else if (toast.type === "request" || toast.type === "request-update") {
+      navigate("/dashboard");
+    } else {
+      navigate("/notifications");
+    }
+  };
 
   const handleLogout = () => {
     navigate("/login", { replace: true, state: null });
@@ -635,6 +676,46 @@ export default function AppShell() {
                 })}
               </nav>
             </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="fixed inset-x-4 top-6 z-50 mx-auto max-w-sm cursor-pointer rounded-2xl border border-slate-200/50 bg-white/85 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-slate-800/50 dark:bg-slate-950/85 dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-[0.98] duration-200"
+            onClick={handleToastClick}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:bg-brand-500/25 dark:text-brand-400">
+                {(() => {
+                  const Icon = toastIconMap[activeToast.type] || Bell;
+                  return <Icon className="h-4 w-4" />;
+                })()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-slate-800 dark:text-white">
+                  {activeToast.type === "message" ? "New Message" : "Squad Notification"}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                  {activeToast.text}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearActiveToast();
+                }}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-900 dark:hover:text-slate-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

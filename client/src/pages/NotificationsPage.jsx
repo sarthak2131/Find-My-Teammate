@@ -1,4 +1,5 @@
 import { Bell, CheckCheck, Users, Zap, MessageSquare, Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useSocketContext } from "../context/SocketContext";
 import PageHeader from "../components/shared/PageHeader";
 import { formatDateTime } from "../utils/formatters";
@@ -18,6 +19,7 @@ function getNotifConfig(type) {
 }
 
 export default function NotificationsPage() {
+  const navigate = useNavigate();
   const {
     notifications,
     notificationsLoaded,
@@ -68,7 +70,24 @@ export default function NotificationsPage() {
             return (
               <div
                 key={notification._id}
-                className={`surface flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${
+                onClick={async () => {
+                  if (!notification.isRead) {
+                    try {
+                      await markNotificationRead(notification._id);
+                    } catch (err) {
+                      console.error("Failed to mark notification as read", err);
+                    }
+                  }
+
+                  if (notification.type === "message") {
+                    navigate(`/chat?user=${notification.referenceId}`);
+                  } else if (notification.type === "request" || notification.type === "request-update") {
+                    navigate("/dashboard");
+                  } else {
+                    navigate("/notifications");
+                  }
+                }}
+                className={`surface flex flex-col gap-4 md:flex-row md:items-center md:justify-between cursor-pointer hover:scale-[1.005] hover:border-brand-500/20 dark:hover:border-accent-500/20 transition duration-200 ${
                   notification.isRead ? "opacity-70" : "ring-2 ring-brand-200 dark:ring-brand-800"
                 }`}
               >
@@ -94,7 +113,10 @@ export default function NotificationsPage() {
                 {!notification.isRead && (
                   <button
                     type="button"
-                    onClick={() => markNotificationRead(notification._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markNotificationRead(notification._id);
+                    }}
                     className="btn-secondary shrink-0 text-xs"
                   >
                     <CheckCheck className="h-3.5 w-3.5" /> Mark read

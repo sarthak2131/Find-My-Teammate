@@ -82,14 +82,35 @@ export default function ChatPage() {
   }, [selectedUserId]);
 
   useEffect(() => {
-    if (!lastMessage || !selectedUserId) return;
-    const isRelevant =
-      lastMessage.sender?._id === selectedUserId || lastMessage.receiver?._id === selectedUserId;
-    if (isRelevant) {
-      setMessages((current) => [...current, lastMessage]);
-      clearLastMessage();
+    if (!lastMessage) return;
+
+    // Helper to update sidebar list
+    const partner = lastMessage.sender?._id === user?._id ? lastMessage.receiver : lastMessage.sender;
+    if (partner && partner._id) {
+      setUsers((currentUsers) => {
+        const exists = currentUsers.some((u) => u._id === partner._id);
+        const updatedUser = {
+          ...partner,
+          lastMessage: lastMessage.message,
+          updatedAt: lastMessage.createdAt,
+        };
+        if (exists) {
+          return [updatedUser, ...currentUsers.filter((u) => u._id !== partner._id)];
+        } else {
+          return [updatedUser, ...currentUsers];
+        }
+      });
     }
-  }, [lastMessage, selectedUserId, clearLastMessage]);
+
+    if (selectedUserId) {
+      const isRelevant =
+        lastMessage.sender?._id === selectedUserId || lastMessage.receiver?._id === selectedUserId;
+      if (isRelevant) {
+        setMessages((current) => [...current, lastMessage]);
+        clearLastMessage();
+      }
+    }
+  }, [lastMessage, selectedUserId, clearLastMessage, user?._id]);
 
   const handleComposerChange = (event) => {
     setDraft(event.target.value);
@@ -107,6 +128,25 @@ export default function ChatPage() {
       message: draft.trim(),
     });
     setMessages((current) => [...current, data.message]);
+
+    // Update sidebar conversations list for the sent message
+    const partner = data.message.receiver;
+    if (partner && partner._id) {
+      setUsers((currentUsers) => {
+        const exists = currentUsers.some((u) => u._id === partner._id);
+        const updatedUser = {
+          ...partner,
+          lastMessage: data.message.message,
+          updatedAt: data.message.createdAt,
+        };
+        if (exists) {
+          return [updatedUser, ...currentUsers.filter((u) => u._id !== partner._id)];
+        } else {
+          return [updatedUser, ...currentUsers];
+        }
+      });
+    }
+
     setDraft("");
     emitTyping(selectedUserId, false);
   };
