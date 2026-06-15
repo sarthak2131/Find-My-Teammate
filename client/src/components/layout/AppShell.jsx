@@ -32,7 +32,7 @@ import api from "../../services/api";
 const navLinks = [
   { to: "/feed", label: "Arena", caption: "Active hackathons", icon: Home },
   { to: "/explore", label: "Explore", caption: "Scout teammates", icon: Compass },
-  { to: "/projects/new", label: "Create", caption: "Post a fresh idea", icon: Plus },
+  { to: "/hackathons/new", label: "Create", caption: "Post hackathon team call", icon: Plus },
   { to: "/dashboard", label: "Command", caption: "Manage squads", icon: LayoutDashboard },
   { to: "/likes", label: "Saved", caption: "Bookmarked posts", icon: Bookmark },
   { to: "/chat", label: "Chat", caption: "Direct messages", icon: MessageSquare },

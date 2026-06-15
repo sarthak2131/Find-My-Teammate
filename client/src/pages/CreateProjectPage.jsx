@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   UploadCloud,
   X,
@@ -12,6 +12,9 @@ import {
   ChevronRight,
   Rocket,
   Loader2,
+  Trophy,
+  MapPin,
+  Award,
 } from "lucide-react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -28,6 +31,9 @@ const initialForm = {
   status: "open",
   preferredGender: "any",
   preferredTeammateNote: "",
+  hackathonName: "",
+  venue: "",
+  prizePool: "",
 };
 
 const POPULAR_SKILLS = [
@@ -48,8 +54,11 @@ const POPULAR_ROLE_NOTES = [
 
 export default function CreateProjectPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const isEditMode = !!id;
+  const isHackathonMode = !isEditMode && location.pathname === "/hackathons/new";
+
   const fileInputRef = useRef(null);
   const autocompleteRef = useRef(null);
   const { user } = useAuth();
@@ -64,13 +73,14 @@ export default function CreateProjectPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [roleSuggestions, setRoleSuggestions] = useState([]);
   const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
+  const [detectedHackathon, setDetectedHackathon] = useState(false);
   const roleAutocompleteRef = useRef(null);
-
 
   useEffect(() => {
     if (!isEditMode) return;
     api.get(`/projects/${id}`).then(({ data }) => {
       const project = data.project;
+      setDetectedHackathon(!!project.isHackathon);
       setForm({
         title: project.title || "",
         description: project.description || "",
@@ -80,6 +90,9 @@ export default function CreateProjectPage() {
         status: project.status || "open",
         preferredGender: project.preferredGender || "any",
         preferredTeammateNote: project.preferredTeammateNote || "",
+        hackathonName: project.hackathonName || "",
+        venue: project.venue || "",
+        prizePool: project.prizePool || "",
       });
       if (project.posterUrl) setPosterPreview(project.posterUrl);
     }).catch(() => setError("Failed to load project."));
@@ -97,6 +110,9 @@ export default function CreateProjectPage() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Determine if we're in hackathon mode
+  const showHackathonFields = isHackathonMode || detectedHackathon;
 
   const handleRoleNoteChange = (e) => {
     const value = e.target.value;
@@ -176,15 +192,19 @@ export default function CreateProjectPage() {
       if (posterFile) payload.append("poster", posterFile);
       else if (isEditMode) payload.append("posterUrl", posterPreview || "");
 
+      // Mark as hackathon if on hackathon route or editing a hackathon
+      payload.append("isHackathon", showHackathonFields ? "true" : "false");
+
       if (isEditMode) {
         await api.put(`/projects/${id}`, payload);
         navigate(`/projects/${id}`);
       } else {
         await api.post("/projects/create", payload);
+        // Go to dashboard; hackathons will show up in hackathon section
         navigate("/dashboard");
       }
     } catch (requestError) {
-      setError(requestError.response?.data?.message || `Could not ${isEditMode ? "update" : "create"} project.`);
+      setError(requestError.response?.data?.message || `Could not ${isEditMode ? "update" : "create"} ${showHackathonFields ? "hackathon" : "project"}.`);
     } finally {
       setSaving(false);
     }
@@ -195,48 +215,82 @@ export default function CreateProjectPage() {
     : posterPreview &&
       (posterPreview.startsWith("data:video/") || /\.(mp4|webm|ogg|mov)($|\?)/i.test(posterPreview));
 
+  const entityLabel = showHackathonFields ? "hackathon" : "project";
+  const EntityLabelCap = showHackathonFields ? "Hackathon" : "Project";
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 page-enter">
       <PageHeader
-        badge={isEditMode ? "Edit project" : "New project"}
-        badgeIcon={Rocket}
-        title={isEditMode ? "Update your project" : "Post a new project"}
+        badge={isEditMode ? `Edit ${entityLabel}` : `New ${entityLabel}`}
+        badgeIcon={showHackathonFields ? Trophy : Rocket}
+        title={
+          isEditMode
+            ? `Update your ${entityLabel}`
+            : showHackathonFields
+            ? "Post a hackathon team call"
+            : "Post a new project"
+        }
         description={
           isEditMode
-            ? "Change details, poster, and who you're looking for."
+            ? `Change details, poster, and who you're looking for.`
+            : showHackathonFields
+            ? "Drop your hackathon details, required skills, and recruit the perfect teammates."
             : "Describe your idea, add a poster, and recruit the perfect teammates."
         }
       />
 
       <form onSubmit={handleSubmit} className="surface space-y-0 divide-y-2 divide-brand-100 p-0 dark:divide-brand-900/50">
-        
 
-
+        {/* BASICS SECTION */}
         <div className="space-y-5 p-6">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-brand-600">
-            <Target className="h-4 w-4" /> Basics
+            <Target className="h-4 w-4" /> {showHackathonFields ? "Hackathon basics" : "Basics"}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block sm:col-span-2">
-              <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Project title *</span>
-              <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="AI Resume Builder, Smart Campus App…" required />
+              <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">
+                {showHackathonFields ? "Team / idea title *" : "Project title *"}
+              </span>
+              <input
+                className="input"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder={showHackathonFields ? "AI Health Monitor, Smart Traffic Optimizer…" : "AI Resume Builder, Smart Campus App…"}
+                required
+              />
             </label>
+
+            {/* Hackathon-specific: Hackathon name */}
+            {showHackathonFields && (
+              <label className="block sm:col-span-2">
+                <span className="mb-1.5 flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400">
+                  <Trophy className="h-3.5 w-3.5" /> Hackathon name
+                </span>
+                <input
+                  className="input"
+                  value={form.hackathonName}
+                  onChange={(e) => setForm({ ...form, hackathonName: e.target.value })}
+                  placeholder="Smart India Hackathon 2025, HackBVP…"
+                />
+              </label>
+            )}
+
             <label className="block">
               <span className="mb-1.5 flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400">
-                <Calendar className="h-3.5 w-3.5" /> Deadline
+                <Calendar className="h-3.5 w-3.5" /> {showHackathonFields ? "Hackathon date" : "Deadline"}
               </span>
               <input className="input" type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
             </label>
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Status</span>
               <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                <option value="open">Open — recruiting</option>
-                <option value="in-progress">In progress</option>
+                <option value="open">{showHackathonFields ? "Open — recruiting teammates" : "Open — recruiting"}</option>
+                <option value="in-progress">{showHackathonFields ? "Team locked — building" : "In progress"}</option>
                 <option value="closed">Closed</option>
               </select>
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Team capacity</span>
+              <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Team size</span>
               <input
                 className="input"
                 type="number"
@@ -247,13 +301,56 @@ export default function CreateProjectPage() {
                 placeholder="4"
               />
             </label>
+
+            {/* Hackathon-specific: Venue */}
+            {showHackathonFields && (
+              <label className="block">
+                <span className="mb-1.5 flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400">
+                  <MapPin className="h-3.5 w-3.5" /> Venue / mode
+                </span>
+                <input
+                  className="input"
+                  value={form.venue}
+                  onChange={(e) => setForm({ ...form, venue: e.target.value })}
+                  placeholder="Online / Delhi NCR / NSUT Campus…"
+                />
+              </label>
+            )}
+
+            {/* Hackathon-specific: Prize pool */}
+            {showHackathonFields && (
+              <label className="block">
+                <span className="mb-1.5 flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400">
+                  <Award className="h-3.5 w-3.5" /> Prize pool (optional)
+                </span>
+                <input
+                  className="input"
+                  value={form.prizePool}
+                  onChange={(e) => setForm({ ...form, prizePool: e.target.value })}
+                  placeholder="₹1,00,000 / $5000 / Internship offers…"
+                />
+              </label>
+            )}
           </div>
           <label className="block">
-            <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Description *</span>
-            <textarea className="input min-h-36 resize-none" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What are you building? What roles do you need?" required />
+            <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">
+              {showHackathonFields ? "Idea description *" : "Description *"}
+            </span>
+            <textarea
+              className="input min-h-36 resize-none"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder={
+                showHackathonFields
+                  ? "What problem are you solving? What's the tech stack? What roles do you need?"
+                  : "What are you building? What roles do you need?"
+              }
+              required
+            />
           </label>
         </div>
 
+        {/* POSTER SECTION */}
         <div className="p-6">
           <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-accent-600">
             <ImageIcon className="h-4 w-4" /> Poster (image or video)
@@ -280,16 +377,19 @@ export default function CreateProjectPage() {
               }`}
             >
               <UploadCloud className="mx-auto h-10 w-10 text-brand-400" />
-              <p className="mt-2 text-sm font-semibold">Drop poster here or click to browse</p>
+              <p className="mt-2 text-sm font-semibold">
+                {showHackathonFields ? "Drop hackathon poster here or click to browse" : "Drop poster here or click to browse"}
+              </p>
               <p className="text-xs text-slate-500">Max 10MB</p>
               <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
             </div>
           )}
         </div>
 
+        {/* TEAM NEEDS SECTION */}
         <div className="space-y-5 p-6">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-brand-600">
-            <Users className="h-4 w-4" /> Team needs
+            <Users className="h-4 w-4" /> {showHackathonFields ? "Teammates needed" : "Team needs"}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="relative sm:col-span-2" ref={autocompleteRef}>
@@ -317,10 +417,12 @@ export default function CreateProjectPage() {
             </label>
             <div className="relative" ref={roleAutocompleteRef}>
               <label className="block">
-                <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">Role note</span>
-                <input 
-                  className="input" 
-                  value={form.preferredTeammateNote} 
+                <span className="mb-1.5 block text-xs font-bold text-brand-700 dark:text-brand-400">
+                  {showHackathonFields ? "Role you need" : "Role note"}
+                </span>
+                <input
+                  className="input"
+                  value={form.preferredTeammateNote}
                   onChange={handleRoleNoteChange}
                   onFocus={() => {
                     if (!form.preferredTeammateNote.trim()) {
@@ -333,17 +435,17 @@ export default function CreateProjectPage() {
                     }
                     setShowRoleSuggestions(true);
                   }}
-                  placeholder="e.g. Backend dev with ML…" 
-                  maxLength={200} 
+                  placeholder={showHackathonFields ? "e.g. ML engineer for model building…" : "e.g. Backend dev with ML…"}
+                  maxLength={200}
                 />
               </label>
               {showRoleSuggestions && roleSuggestions.length > 0 && (
                 <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-xl border-2 border-brand-200 bg-white shadow-card dark:border-brand-800 dark:bg-[#0c1824]">
                   {roleSuggestions.map((note) => (
-                    <button 
-                      key={note} 
-                      type="button" 
-                      onClick={() => selectRoleSuggestion(note)} 
+                    <button
+                      key={note}
+                      type="button"
+                      onClick={() => selectRoleSuggestion(note)}
                       className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-brand-50 dark:hover:bg-brand-950/40"
                     >
                       <Zap className="h-3.5 w-3.5 text-accent-500" /> {note}
@@ -362,9 +464,13 @@ export default function CreateProjectPage() {
         <div className="flex flex-wrap gap-3 p-6">
           <button type="submit" disabled={saving} className="btn-primary">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
-            {saving ? "Saving…" : isEditMode ? "Update project" : "Publish project"}
+            {saving ? "Saving…" : isEditMode ? `Update ${entityLabel}` : `Publish ${entityLabel}`}
           </button>
-          <button type="button" onClick={() => (isEditMode ? navigate(`/projects/${id}`) : (setForm(initialForm), clearPoster()))} className="btn-secondary">
+          <button
+            type="button"
+            onClick={() => (isEditMode ? navigate(`/projects/${id}`) : (setForm(initialForm), clearPoster()))}
+            className="btn-secondary"
+          >
             {isEditMode ? "Cancel" : "Reset"}
           </button>
         </div>

@@ -73,6 +73,25 @@ const projectSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isHackathon: {
+      type: Boolean,
+      default: false,
+    },
+    hackathonName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    venue: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    prizePool: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   {
     timestamps: true,

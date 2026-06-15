@@ -54,6 +54,7 @@ export default function HomeFeedPage() {
               preferredGender: preferredGender || undefined,
               excludeOwner: true,
               excludeShowcase: "true",
+              isHackathon: "true",
             },
           }),
           api.get("/requests", {
@@ -162,7 +163,7 @@ export default function HomeFeedPage() {
         title="Active hackathons"
         description="Browse active hackathon team recruitment calls, then apply to join."
         action={
-          <Link to="/projects/new" className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-brand-700 shadow-md hover:bg-brand-50">
+          <Link to="/hackathons/new" className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-brand-700 shadow-md hover:bg-brand-50">
             <Plus className="h-4 w-4" /> Post team call
           </Link>
         }
@@ -227,7 +228,7 @@ export default function HomeFeedPage() {
               title="No active hackathons found"
               description="Try different filters or be the first to host a hackathon team call."
               action={
-                <Link to="/projects/new" className="btn-primary shadow-glow">
+                <Link to="/hackathons/new" className="btn-primary shadow-glow">
                   <Plus className="mr-2 h-4 w-4" />
                   Post team call
                 </Link>

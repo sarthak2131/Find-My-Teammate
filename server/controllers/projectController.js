@@ -63,6 +63,10 @@ const createProject = asyncHandler(async (req, res) => {
     status,
     preferredGender,
     preferredTeammateNote,
+    isHackathon,
+    hackathonName,
+    venue,
+    prizePool,
   } = req.body;
 
   if (!title || !description) {
@@ -84,6 +88,10 @@ const createProject = asyncHandler(async (req, res) => {
     teamLead: req.user._id,
     members: [req.user._id],
     isShowcase: req.body.isShowcase === "true" || req.body.isShowcase === true,
+    isHackathon: isHackathon === "true" || isHackathon === true,
+    hackathonName: String(hackathonName || "").trim(),
+    venue: String(venue || "").trim(),
+    prizePool: String(prizePool || "").trim(),
   });
 
   const populatedProject = await Project.findById(project._id)
@@ -121,6 +129,13 @@ const getProjects = asyncHandler(async (req, res) => {
 
   if (excludeShowcase === "true") {
     filters.push({ isShowcase: { $ne: true } });
+  }
+
+  // Filter by type: hackathon vs project
+  if (req.query.isHackathon === "true") {
+    filters.push({ isHackathon: true });
+  } else if (req.query.isHackathon === "false") {
+    filters.push({ $or: [{ isHackathon: false }, { isHackathon: { $exists: false } }] });
   }
 
   if (skill) {
@@ -302,6 +317,11 @@ const updateProject = asyncHandler(async (req, res) => {
   if (req.file || req.body.posterUrl !== undefined) {
     project.posterUrl = resolvePosterUrl(req);
   }
+
+  // Update hackathon-specific fields if provided
+  if (req.body.hackathonName !== undefined) project.hackathonName = String(req.body.hackathonName || "").trim();
+  if (req.body.venue !== undefined) project.venue = String(req.body.venue || "").trim();
+  if (req.body.prizePool !== undefined) project.prizePool = String(req.body.prizePool || "").trim();
 
   await project.save();
 

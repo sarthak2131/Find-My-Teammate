@@ -34,6 +34,7 @@ function App() {
               <Route path="/feed" element={<HomeFeedPage />} />
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/projects/new" element={<CreateProjectPage />} />
+              <Route path="/hackathons/new" element={<CreateProjectPage />} />
               <Route path="/projects/:id/edit" element={<CreateProjectPage />} />
               <Route path="/projects/:id" element={<ProjectDetailsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
