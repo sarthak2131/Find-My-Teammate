@@ -1,4 +1,6 @@
 const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const vercelPattern = /^https:\/\/.*\.vercel\.app$/;
+const renderPattern = /^https:\/\/.*\.onrender\.com$/;
 
 const allowedOrigins = (process.env.CLIENT_URL || "")
   .split(",")
@@ -10,7 +12,12 @@ const isAllowedOrigin = (origin) => {
     return true;
   }
 
-  return allowedOrigins.includes(origin) || localOriginPattern.test(origin);
+  return (
+    allowedOrigins.includes(origin) ||
+    localOriginPattern.test(origin) ||
+    vercelPattern.test(origin) ||
+    renderPattern.test(origin)
+  );
 };
 
 const origin = (requestOrigin, callback) => {
