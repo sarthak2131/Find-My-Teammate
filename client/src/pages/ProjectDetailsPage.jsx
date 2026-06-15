@@ -72,6 +72,8 @@ export default function ProjectDetailsPage() {
   const fitInsights = getProjectFitInsights(project, user);
   const readiness = getProjectReadiness(project);
   const timeline = getProjectTimelineInsight(project);
+  const gitHubLinkMatch = project?.description?.match(/https:\/\/github\.com\/[^\s]+/);
+  const gitHubUrl = gitHubLinkMatch ? gitHubLinkMatch[0] : null;
 
   const handleRequestJoin = async () => {
     try {
@@ -166,11 +168,14 @@ export default function ProjectDetailsPage() {
       </div>
 
       <PageHeader
-        badge={project.status}
+        badge={project.isShowcase ? "Showcase" : project.status}
         badgeIcon={Code2}
         title={project.title}
         description={project.description}
-        stats={[
+        stats={project.isShowcase ? [
+          { label: "Type", value: "Showcase Project" },
+          { label: "Skills", value: (project.requiredSkills || []).length },
+        ] : [
           { label: "Deadline", value: formatDate(project.deadline) || "—" },
           { label: "Members", value: `${project.members?.length || 0}/${capacity}` },
           { label: "Skills", value: (project.requiredSkills || []).length },
@@ -194,83 +199,104 @@ export default function ProjectDetailsPage() {
             <div className="flex flex-wrap gap-2">
               {project.requiredSkills.map((s) => <span key={s} className="chip">{s}</span>)}
             </div>
+                    {!project.isShowcase && (
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="surface-muted border-slate-200 bg-slate-50/70 dark:border-slate-700/50 dark:bg-slate-900/20">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Capacity</p>
+                  <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{openSpots} spots</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{project.members?.length || 0}/{capacity} filled</p>
+                </div>
+                <div className="surface-muted border-accent-100 bg-accent-50/60 dark:border-accent-900/30 dark:bg-accent-950/10">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-accent-600 dark:text-accent-300">Project readiness</p>
+                  <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{readiness.score}%</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{timeline.label}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500"
+                    style={{ width: `${Math.max(10, Math.round(((project.members?.length || 0) / capacity) * 100))}%` }}
+                  />
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900/30 dark:bg-emerald-950/10">
+                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Skills you match</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {fitInsights.matchedSkills.length > 0 ? fitInsights.matchedSkills.map((skill) => (
+                        <span key={skill} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-slate-900 dark:text-emerald-300">
+                          {skill}
+                        </span>
+                      )) : <span className="text-sm text-slate-500 dark:text-slate-400">Add more matching skills to improve your fit.</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-950/10">
+                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Skill gaps to cover</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {fitInsights.missingSkills.length > 0 ? fitInsights.missingSkills.slice(0, 4).map((skill) => (
+                        <span key={skill} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-amber-700 dark:bg-slate-900 dark:text-amber-300">
+                          {skill}
+                        </span>
+                      )) : <span className="text-sm text-slate-500 dark:text-slate-400">You already cover all listed skills.</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="surface-muted border-slate-200 bg-slate-50/70 dark:border-slate-700/50 dark:bg-slate-900/20">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Capacity</p>
-              <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{openSpots} spots</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{project.members?.length || 0}/{capacity} filled</p>
-            </div>
-            <div className="surface-muted border-accent-100 bg-accent-50/60 dark:border-accent-900/30 dark:bg-accent-950/10">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-accent-600 dark:text-accent-300">Project readiness</p>
-              <p className="mt-2 text-2xl font-extrabold text-slate-800 dark:text-white">{readiness.score}%</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{timeline.label}</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500"
-                style={{ width: `${Math.max(10, Math.round(((project.members?.length || 0) / capacity) * 100))}%` }}
-              />
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900/30 dark:bg-emerald-950/10">
-                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Skills you match</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {fitInsights.matchedSkills.length > 0 ? fitInsights.matchedSkills.map((skill) => (
-                    <span key={skill} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-slate-900 dark:text-emerald-300">
-                      {skill}
-                    </span>
-                  )) : <span className="text-sm text-slate-500 dark:text-slate-400">Add more matching skills to improve your fit.</span>}
-                </div>
-              </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-950/10">
-                <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Skill gaps to cover</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {fitInsights.missingSkills.length > 0 ? fitInsights.missingSkills.slice(0, 4).map((skill) => (
-                    <span key={skill} className="rounded-lg bg-white px-2 py-1 text-xs font-semibold text-amber-700 dark:bg-slate-900 dark:text-amber-300">
-                      {skill}
-                    </span>
-                  )) : <span className="text-sm text-slate-500 dark:text-slate-400">You already cover all listed skills.</span>}
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="flex flex-wrap gap-3">
-            {(isOwner || isMember) ? (
-              <Link to="/dashboard" className="btn-primary">Manage in dashboard</Link>
-            ) : canRespondToInvite ? (
+            {project.isShowcase ? (
               <>
-                <button type="button" onClick={() => handleRequestAction(existingRequest._id, "accept")} disabled={!eligibility.allowed || projectIsFull} className="btn-primary !from-success-600 !to-success-500">
-                  <Check className="h-4 w-4" /> {projectIsFull ? "Team full" : "Accept invite"}
-                </button>
-                <button type="button" onClick={() => handleRequestAction(existingRequest._id, "reject")} className="btn-secondary">Decline</button>
+                {gitHubUrl && (
+                  <a href={gitHubUrl} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
+                    <Github className="h-4 w-4" /> View GitHub Repository
+                  </a>
+                )}
+                {canMessageLead && (
+                  <Link to={`/chat?user=${project.createdBy._id}`} className="btn-secondary"><MessageCircle className="h-4 w-4" /> Message creator</Link>
+                )}
               </>
-            ) : existingRequest ? (
-              <span className="chip-accent">Status: {existingRequest.status}</span>
             ) : (
-              <button type="button" onClick={handleRequestJoin} disabled={!eligibility.allowed || projectIsFull} className="btn-primary">
-                <UserPlus className="h-4 w-4" /> {projectIsFull ? "Team full" : eligibility.allowed ? "Request to join" : "Not eligible"}
-              </button>
-            )}
-            {canMessageLead && (
-              <Link to={`/chat?user=${project.createdBy._id}`} className="btn-secondary"><MessageCircle className="h-4 w-4" /> Message lead</Link>
+              <>
+                {(isOwner || isMember) ? (
+                  <Link to="/dashboard" className="btn-primary">Manage in dashboard</Link>
+                ) : canRespondToInvite ? (
+                  <>
+                    <button type="button" onClick={() => handleRequestAction(existingRequest._id, "accept")} disabled={!eligibility.allowed || projectIsFull} className="btn-primary !from-success-600 !to-success-500">
+                      <Check className="h-4 w-4" /> {projectIsFull ? "Team full" : "Accept invite"}
+                    </button>
+                    <button type="button" onClick={() => handleRequestAction(existingRequest._id, "reject")} className="btn-secondary">Decline</button>
+                  </>
+                ) : existingRequest ? (
+                  <span className="chip-accent">Status: {existingRequest.status}</span>
+                ) : (
+                  <button type="button" onClick={handleRequestJoin} disabled={!eligibility.allowed || projectIsFull} className="btn-primary">
+                    <UserPlus className="h-4 w-4" /> {projectIsFull ? "Team full" : eligibility.allowed ? "Request to join" : "Not eligible"}
+                  </button>
+                )}
+                {canMessageLead && (
+                  <Link to={`/chat?user=${project.createdBy._id}`} className="btn-secondary"><MessageCircle className="h-4 w-4" /> Message lead</Link>
+                )}
+              </>
             )}
           </div>
 
           {feedback && <div className="rounded-xl border-2 border-brand-200 bg-brand-50 p-3 text-sm text-brand-800">{feedback}</div>}
-          {projectIsFull && !isOwner && !isMember && (
-            <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
-              This team is currently full. You can still bookmark it and track whether a spot opens up.
-            </div>
-          )}
-          {!eligibility.allowed && !isOwner && !isMember && (
-            <div className="rounded-xl border-2 border-red-200 bg-red-50 p-3 text-sm text-red-700">{eligibility.message}</div>
-          )}
+          {!project.isShowcase && (
+            <>
+              {projectIsFull && !isOwner && !isMember && (
+                <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                  This team is currently full. You can still bookmark it and track whether a spot opens up.
+                </div>
+              )}
+              {!eligibility.allowed && !isOwner && !isMember && (
+                <div className="rounded-xl border-2 border-red-200 bg-red-50 p-3 text-sm text-red-700">{eligibility.message}</div>
+              )}
+            </>
+          )}  )}
         </div>
 
         {project.posterUrl && (

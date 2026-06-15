@@ -17,7 +17,7 @@ const demoUsers = [
     availability: "Looking for frontend and backend teammates",
     gender: "male",
     githubLink: "https://github.com/demo-lead",
-    profileImage: createDefaultProfileImage(),
+    profileImage: createDefaultProfileImage("aarav"),
   },
   {
     name: "Siya Full Stack Dev",
@@ -30,7 +30,7 @@ const demoUsers = [
     availability: "Open for backend-heavy collaboration",
     gender: "female",
     githubLink: "https://github.com/demo-builder",
-    profileImage: createDefaultProfileImage(),
+    profileImage: createDefaultProfileImage("siya"),
   },
   {
     name: "Admin Demo",
@@ -43,7 +43,7 @@ const demoUsers = [
     availability: "Monitoring the workspace",
     gender: "male",
     githubLink: "https://github.com/demo-admin",
-    profileImage: createDefaultProfileImage(),
+    profileImage: createDefaultProfileImage("admin"),
   },
 ];
 
@@ -74,21 +74,18 @@ const ensureDemoUsers = async () => {
     demoUserIds.push(existingUser._id);
   }
 
-  await User.updateMany(
-    {
-      $or: [
-        { profileImage: { $exists: false } },
-        { "profileImage.url": { $exists: false } },
-        { "profileImage.url": { $in: GENERATED_AVATAR_URLS } },
-      ],
-    },
-    {
-      $set: {
-        "profileImage.url": createDefaultProfileImage().url,
-        "profileImage.publicId": "",
-      },
-    }
-  );
+  const usersToUpdate = await User.find({
+    $or: [
+      { profileImage: { $exists: false } },
+      { "profileImage.url": { $exists: false } },
+      { "profileImage.url": { $in: GENERATED_AVATAR_URLS } },
+    ],
+  });
+
+  for (const u of usersToUpdate) {
+    u.profileImage = createDefaultProfileImage(u.name || u.email || "default");
+    await u.save();
+  }
 
   await Notification.deleteMany({ userId: { $in: demoUserIds } });
 
