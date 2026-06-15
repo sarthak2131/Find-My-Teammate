@@ -63,6 +63,11 @@ export default function AppShell() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { unreadNotificationsCount } = useSocketContext();
+
+  const handleLogout = () => {
+    navigate("/login", { replace: true, state: null });
+    logout();
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState({ projects: [], users: [] });
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -460,7 +465,7 @@ export default function AppShell() {
                       
                       <button
                         type="button"
-                        onClick={logout}
+                        onClick={handleLogout}
                         className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition"
                       >
                         <LogOut className="h-3.5 w-3.5" />
