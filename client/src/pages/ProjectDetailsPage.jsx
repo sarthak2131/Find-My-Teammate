@@ -199,7 +199,8 @@ export default function ProjectDetailsPage() {
             <div className="flex flex-wrap gap-2">
               {project.requiredSkills.map((s) => <span key={s} className="chip">{s}</span>)}
             </div>
-                    {!project.isShowcase && (
+          )}
+          {!project.isShowcase && (
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="surface-muted border-slate-200 bg-slate-50/70 dark:border-slate-700/50 dark:bg-slate-900/20">
@@ -296,7 +297,7 @@ export default function ProjectDetailsPage() {
                 <div className="rounded-xl border-2 border-red-200 bg-red-50 p-3 text-sm text-red-700">{eligibility.message}</div>
               )}
             </>
-          )}  )}
+          )}
         </div>
 
         {project.posterUrl && (
