@@ -79,7 +79,7 @@
 
   textarea.input {
     @apply align-top leading-relaxed py-3;
-    border-radius: 1rem !important;
+    border-radius: 0.375rem !important;
   }
 
   .chip {
