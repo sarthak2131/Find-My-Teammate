@@ -77,6 +77,10 @@
     @apply w-full rounded-full border border-slate-200/50 bg-slate-50/50 px-4 py-2 text-xs text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-brand-500/50 focus:ring-4 focus:ring-brand-500/5 focus:bg-white dark:border-slate-800/60 dark:bg-slate-900/40 dark:text-white dark:focus:border-brand-500/50 dark:focus:bg-slate-950 shadow-inner;
   }
 
+  textarea.input {
+    @apply rounded-2xl align-top leading-relaxed py-3;
+  }
+
   .chip {
     @apply inline-flex items-center rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 dark:bg-brand-950/60 dark:text-brand-300;
   }
