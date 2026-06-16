@@ -78,7 +78,8 @@
   }
 
   textarea.input {
-    @apply rounded-2xl align-top leading-relaxed py-3;
+    @apply align-top leading-relaxed py-3;
+    border-radius: 1rem !important;
   }
 
   .chip {
